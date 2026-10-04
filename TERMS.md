@@ -1,12 +1,14 @@
 # Terms & Conditions
 
-**Claude Bug Bounty** — Last updated: April 2026
+**AgentNarna** — Last updated: October 2026
 
 ---
 
 ## 1. What This Tool Is
 
-Claude Bug Bounty is a free, open-source plugin for Claude Code that helps security researchers find vulnerabilities in authorized bug bounty programs. It is a tool to assist human hunters — not a replacement for professional judgment.
+AgentNarna is a free, open-source security-research toolkit for authorized
+pentests and bug-bounty programs. It assists human researchers and does not
+replace professional judgment.
 
 ---
 
@@ -38,7 +40,7 @@ By using this tool, you agree that:
 
 ## 4. What We Are Not Responsible For
 
-The authors of Claude Bug Bounty provide this software **as-is**, with no warranties of any kind.
+The AgentNarna and upstream authors provide this software **as-is**, with no warranties of any kind.
 
 We are not responsible for:
 - Bans, legal action, or penalties resulting from misuse
@@ -85,12 +87,8 @@ These terms may be updated at any time. Continued use of the tool after changes 
 
 ---
 
-## 9. Contact
+## 9. Contact and Security
 
-Questions or concerns: [hello@awarexone.com](mailto:hello@awarexone.com)
-
-Business / partnership inquiries: [b2b@awarexone.com](mailto:b2b@awarexone.com)
-
-Maintainer: [shuvon@awarexone.com](mailto:shuvon@awarexone.com)
-
-For security disclosures about this tool itself, open a GitHub issue marked **[SECURITY]**.
+Use this repository's GitHub Discussions for general questions. Security issues
+in AgentNarna itself must be reported privately as described in
+`.github/SECURITY.md`, never in a public issue.

@@ -13,6 +13,8 @@ import importlib.util
 import os
 import sys
 
+import pytest
+
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
@@ -65,6 +67,7 @@ def test_run_zero_day_fuzzer_no_injection(tmp_path, monkeypatch):
     assert not marker.exists()
 
 
+@pytest.mark.skipif(os.name == "nt", reason="payload is intentionally not a valid Windows path")
 def test_run_vuln_scan_no_injection(tmp_path, monkeypatch):
     hunt = load_hunt()
     marker = tmp_path / "pwned_vuln"

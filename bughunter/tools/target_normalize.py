@@ -7,7 +7,7 @@ Everything a user might type ("https://9am.io/", "9am.io", "localhost:3000",
 nmap and subfinder accept, plus (optionally) the port a live-probe should hit.
 
 Before this existed, `recon_engine.sh` used the raw argument verbatim, so
-`bughunter recon https://9am.io/` ran `nmap https://9am.io/` (→ "0 hosts up")
+`agentnarna recon https://9am.io/` ran `nmap https://9am.io/` (→ "0 hosts up")
 and wrote output to `recon/https:/9am.io`. The shell script has an identical
 normalizer; this module is the Python source of truth for the output directory
 name and the target-type decision, and the two are cross-checked in tests.

@@ -28,7 +28,7 @@ try:  # pragma: no cover - depends on local install
 except ImportError:
     _SSL_CTX = ssl.create_default_context()
 
-USER_AGENT = "agentic-bug-hunter/verifier"
+USER_AGENT = "agentnarna/0.1 verifier"
 
 
 @dataclass

@@ -57,7 +57,7 @@ if _REPO not in sys.path:
     sys.path.insert(0, _REPO)
 from tools.safe_http import safe_urlopen  # noqa: E402
 
-USER_AGENT = "agentic-bug-hunter/poc_bundler"
+USER_AGENT = "agentnarna/0.1 poc-bundler"
 VALID_SEVERITIES = {"critical", "high", "medium", "low", "informational", "none"}
 # HTTP methods that can mutate/destroy production state — refuse without opt-in.
 UNSAFE_METHODS = {"PUT", "DELETE", "PATCH"}
@@ -288,7 +288,7 @@ def build_har(ex: Exchange, redact: bool) -> dict:
     return {
         "log": {
             "version": "1.2",
-            "creator": {"name": "agentic-bug-hunter", "version": "poc_bundler"},
+            "creator": {"name": "agentnarna", "version": "0.1"},
             "entries": [entry],
         }
     }

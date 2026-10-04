@@ -3,7 +3,7 @@ name: Feature Request
 about: Suggest a new capability or improvement
 title: "[FEAT] "
 labels: enhancement
-assignees: shuvonsec
+assignees: ''
 ---
 
 ## What do you want?

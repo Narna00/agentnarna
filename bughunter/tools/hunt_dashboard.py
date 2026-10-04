@@ -197,6 +197,33 @@ def collect_memory(root: str) -> dict:
     }
 
 
+def collect_verifications(root: str) -> dict:
+    """Count proof states without treating arbitrary files as findings."""
+    verified = suppressed = invalid = 0
+    records = []
+    pattern = os.path.join(root, "findings", "**", "validation.json")
+    for path in glob.glob(pattern, recursive=True):
+        try:
+            with open(path, encoding="utf-8") as handle:
+                item = json.load(handle)
+        except (OSError, ValueError):
+            invalid += 1
+            continue
+        verifier = item.get("verifier") or {}
+        reportable = item.get("status") == "validated_finding" and bool(verifier.get("confirmed"))
+        if reportable:
+            verified += 1
+        else:
+            suppressed += 1
+        records.append({
+            "rel": os.path.relpath(path, root).replace(os.sep, "/"),
+            "status": "verified" if reportable else "suppressed",
+            "vuln_class": item.get("vuln_class") or (item.get("finding") or {}).get("vulnerability_type") or "unknown",
+            "endpoint": (item.get("finding") or {}).get("endpoint") or "",
+        })
+    return {"verified": verified, "suppressed": suppressed, "invalid": invalid, "records": records}
+
+
 def collect_state(root: str) -> dict:
     """The whole dashboard's data. Pure given `root`; safe on a fresh checkout."""
     boards = collect_leads(root)
@@ -207,6 +234,7 @@ def collect_state(root: str) -> dict:
     findings = _collect_docs(root, "findings")
     reports = _collect_docs(root, "reports")
     recon = collect_recon(root)  # compute once; reused in 'recon' and totals below
+    verification = collect_verifications(root)
     return {
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"),
         "root": root,
@@ -216,6 +244,7 @@ def collect_state(root: str) -> dict:
         "reports": reports,
         "galleries": collect_galleries(root),
         "memory": collect_memory(root),
+        "verification": verification,
         "totals": {
             "targets": len(set(list(boards) + list(recon))),
             "leads": len(all_leads),
@@ -223,6 +252,8 @@ def collect_state(root: str) -> dict:
             "investigating": status_totals.get("investigating", 0),
             "reported": status_totals.get("reported", 0),
             "findings": len(findings),
+            "verified": verification["verified"],
+            "suppressed": verification["suppressed"],
             "reports": len(reports),
             "stale": sum(b["stale"] for b in boards.values()),
         },
@@ -234,23 +265,28 @@ def collect_state(root: str) -> dict:
 # ---------------------------------------------------------------------------
 
 _STYLE = """
-:root{--bg:#0b0e14;--panel:#141a24;--panel2:#0f141d;--border:#232a36;
---text:#c8d3f5;--muted:#7f8ba3;--blue:#6cb6ff;--green:#4ade80;--amber:#ffb454;
---red:#ff5c7a;--violet:#a78bfa}
+:root{--bg:#08080c;--panel:#111117;--panel2:#0c0c12;--border:#2a2934;
+--text:#f5f3ff;--muted:#8e8a9d;--blue:#59e6ff;--green:#79f2b2;--amber:#ffd166;
+--red:#ff6685;--violet:#c084fc;--pink:#ff73d1}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font:14px/1.5 system-ui,sans-serif;margin:0;padding:24px}
+body{background:radial-gradient(circle at 85% -10%,#2a1234 0,transparent 32%),var(--bg);
+color:var(--text);font:14px/1.5 Inter,ui-sans-serif,system-ui,sans-serif;margin:0;padding:30px;min-height:100vh}
 a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
-header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-h1{font-size:20px;margin:0}h2{font-size:15px;margin:26px 0 10px;color:var(--muted);
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px;
+padding-bottom:18px;border-bottom:1px solid var(--border)}
+h1{font-size:22px;margin:0;letter-spacing:-.03em}.brand{color:var(--pink)}
+h2{font-size:12px;margin:30px 0 10px;color:var(--muted);
 text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .sub{color:var(--muted);font-size:12px}
 .live{background:var(--green);color:#04120a;font-size:11px;font-weight:700;
 padding:2px 8px;border-radius:999px}
 .tiles{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
-.tile{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.tile{background:linear-gradient(145deg,rgba(255,255,255,.035),transparent),var(--panel);
+border:1px solid var(--border);border-radius:14px;padding:15px 17px;box-shadow:0 12px 40px rgba(0,0,0,.14)}
 .tile .n{font-size:26px;font-weight:700}.tile .l{color:var(--muted);font-size:12px;margin-top:2px}
 .tile.alert{border-color:var(--red)}.tile.alert .n{color:var(--red)}
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;
+.tile.verified{border-color:rgba(121,242,178,.45)}.tile.verified .n{color:var(--green)}
+.panel{background:rgba(17,17,23,.92);border:1px solid var(--border);border-radius:14px;
 padding:4px 0;overflow:hidden}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:8px 14px;border-bottom:1px solid var(--border);vertical-align:top}
@@ -268,7 +304,7 @@ border:1px solid var(--border)}
 .board-hd{display:flex;gap:10px;align-items:baseline;margin:22px 0 8px}
 .board-hd .t{font-size:15px;font-weight:600}
 .empty{color:var(--muted);padding:16px 14px}
-footer{margin-top:32px;color:var(--muted);font-size:12px}
+footer{margin-top:32px;padding-top:18px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
 """
 
 
@@ -280,8 +316,9 @@ def _chip(text: str, cls: str) -> str:
     return f'<span class="chip {cls}">{_esc(text)}</span>'
 
 
-def _tile(n, label, alert=False) -> str:
-    return (f'<div class="tile{" alert" if alert else ""}">'
+def _tile(n, label, alert=False, verified=False) -> str:
+    css = (" alert" if alert else "") + (" verified" if verified else "")
+    return (f'<div class="tile{css}">'
             f'<div class="n">{_esc(n)}</div><div class="l">{_esc(label)}</div></div>')
 
 
@@ -331,9 +368,9 @@ def render_dashboard(state: dict, live: bool = False) -> str:
     tiles = "".join([
         _tile(t["targets"], "targets"),
         _tile(t["leads"], "leads"),
-        _tile(t["untouched"], "untouched"),
-        _tile(t["investigating"], "in progress"),
-        _tile(t["findings"], "findings"),
+        _tile(t["investigating"], "investigating"),
+        _tile(t["verified"], "verified findings", verified=True),
+        _tile(t["suppressed"], "suppressed candidates"),
         _tile(t["stale"], "stale HIGH leads", alert=t["stale"] > 0),
     ])
 
@@ -392,20 +429,33 @@ def render_dashboard(state: dict, live: bool = False) -> str:
                      '<tr><th>when</th><th>target</th><th>class/action</th><th>result</th></tr>'
                      f'{mem_recent}</table></div>')
 
+    verification_rows = "".join(
+        "<tr>"
+        f"<td>{_chip(v['status'], 's-reported' if v['status'] == 'verified' else 's-killed')}</td>"
+        f"<td>{_esc(v['vuln_class'])}</td><td class='ev'>{_esc(v['endpoint'])}</td>"
+        f"<td>{_file_link(v['rel'], live, 'validation')}</td></tr>"
+        for v in state["verification"]["records"][:50]
+    )
+    verification_html = (
+        '<div class="panel"><table><tr><th>proof state</th><th>class</th><th>endpoint</th><th>record</th></tr>'
+        f'{verification_rows}</table></div>' if verification_rows else
+        '<div class="panel"><div class="empty">No verification records yet. Candidates remain off the report path.</div></div>'
+    )
+
     return (
         "<!doctype html><html><head><meta charset=utf-8>"
-        f"{refresh}<title>Hunt Dashboard</title><style>{_STYLE}</style></head><body>"
-        f'<header><h1>🎯 Hunt Dashboard</h1>{badge}'
-        f'<span class="sub">generated {_esc(state["generated"])} · {_esc(state["root"])}</span></header>'
+        f"{refresh}<title>agentnarna / Hunt Dashboard</title><style>{_STYLE}</style></head><body>"
+        f'<header><h1><span class="brand">agentnarna</span> / Hunt Dashboard</h1>{badge}'
+        f'<span class="sub">evidence-first console · {_esc(state["generated"])}</span></header>'
         f'<div class="tiles">{tiles}</div>'
         f'<h2>Lead board</h2>{boards_html}'
+        f'<h2>Verification spine</h2>{verification_html}'
         f'<h2>Recon surface</h2>{recon_html}'
-        f'<h2>Findings</h2>{_doc_table(state["findings"], "findings")}'
-        f'<h2>Reports</h2>{_doc_table(state["reports"], "reports")}'
+        f'<h2>Artifacts</h2>{_doc_table(state["findings"], "artifacts")}'
+        f'<h2>Submission candidates</h2>{_doc_table(state["reports"], "reports")}'
         f'{galleries_html}'
         f'<h2>Memory flywheel</h2>{mem_html}'
-        '<footer>Agentic Bug Hunter · local dashboard · '
-        'data read from memory/leads, recon/, findings/, reports/, hunt-memory/</footer>'
+        '<footer>agentnarna · local-only operator console · leads are not findings · reports require proof</footer>'
         "</body></html>")
 
 

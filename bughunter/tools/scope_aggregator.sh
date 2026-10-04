@@ -48,7 +48,7 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
-CACHE_DIR="${BBHUNT_CACHE_DIR:-$HOME/.cache/bbhunt/scope}"
+CACHE_DIR="${AGENTNARNA_CACHE_DIR:-${BBHUNT_CACHE_DIR:-$HOME/.cache/agentnarna/scope}}"
 mkdir -p "$CACHE_DIR"
 
 # shellcheck source=banner.sh

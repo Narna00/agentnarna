@@ -21,7 +21,7 @@ Two usage modes:
        db.stop()
 
 2) CLI tail mode — pipe a bash script through it:
-       BBHUNT_DASHBOARD=1 bash tools/recon_engine.sh target.com \
+       AGENTNARNA_DASHBOARD=1 bash tools/recon_engine.sh target.com \
            | python3 tools/dashboard.py --tail --kind recon --target target.com
 
    The tail parser recognizes the existing log_info / log_done / log_ok
@@ -85,11 +85,19 @@ def _pad_to(s: str, width: int) -> str:
 
 # ── Startup banner ───────────────────────────────────────────────────────────
 #
-# Tall green block letters for "BBHUNT" — drawn by hand so we have zero deps
+# Tall green block letters for "AGENTNARNA"—drawn by hand so we have zero deps
 # (no figlet, no pyfiglet). Each row is exactly 7 columns per letter + 1 gap.
 # If you want different text, swap the LETTERS map. Width-clamps gracefully.
 
 _LETTERS = {
+    "A": [
+        " █████ ",
+        "██   ██",
+        "███████",
+        "███████",
+        "██   ██",
+        "██   ██",
+    ],
     "B": [
         "██████ ",
         "██   ██",
@@ -106,6 +114,22 @@ _LETTERS = {
         "██   ██",
         "██   ██",
     ],
+    "E": [
+        "███████",
+        "██     ",
+        "██████ ",
+        "██████ ",
+        "██     ",
+        "███████",
+    ],
+    "G": [
+        " ██████",
+        "██     ",
+        "██ ████",
+        "██   ██",
+        "██   ██",
+        " ██████",
+    ],
     "U": [
         "██   ██",
         "██   ██",
@@ -119,6 +143,14 @@ _LETTERS = {
         "████  █",
         "██ ██ █",
         "██  ███",
+        "██   ██",
+        "██   ██",
+    ],
+    "R": [
+        "██████ ",
+        "██   ██",
+        "██████ ",
+        "██  ██ ",
         "██   ██",
         "██   ██",
     ],
@@ -157,9 +189,9 @@ def print_banner(
     output_dir: str = "",
     auth: bool = False,
     extra_lines: Optional[list] = None,
-    title: str = "BBHUNT",
-    tagline: str = "+ Recon. Hunt. Validate. Report. +",
-    version: str = "v4.3",
+    title: str = "AGENTNARNA",
+    tagline: str = "+ Map. Adapt. Verify. Report. +",
+    version: str = "v0.1.0",
 ):
     """Print the OpenClaude-style startup banner.
 

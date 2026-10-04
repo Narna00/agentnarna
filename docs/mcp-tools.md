@@ -23,6 +23,7 @@
 | `bughunter_leads` / `next` / `update` | local | — | — |
 | `bughunter_program*` | external read | — | — |
 
-List at runtime: `bughunter mcp tools`.
+List at runtime: `agentnarna mcp tools`. MCP tool IDs retain the `bughunter_`
+prefix for client compatibility.
 
 Backed by existing `tools/recon_engine.sh`, `tools/hunt.py`, `tools/validate.py`, `tools/lead_board.py`, `memory/*`, and `mcp/hackerone-mcp/`.

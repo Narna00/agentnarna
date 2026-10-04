@@ -1,6 +1,6 @@
 # Burp Suite MCP Integration
 
-Connect Claude Bug Bounty to Burp Suite via PortSwigger's official [MCP Server extension](https://github.com/PortSwigger/mcp-server).
+Connect AgentNarna to Burp Suite via PortSwigger's official [MCP Server extension](https://github.com/PortSwigger/mcp-server).
 
 ## How It Works
 

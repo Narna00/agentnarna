@@ -21,14 +21,17 @@ import pytest
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASH = shutil.which("bash")
 
-pytestmark = pytest.mark.skipif(BASH is None, reason="bash not available")
+pytestmark = [
+    pytest.mark.skipif(BASH is None, reason="bash not available"),
+    pytest.mark.skipif(os.name == "nt", reason="requires POSIX symlink semantics"),
+]
 
 
 def _run(script, args, bin_dir):
     env = {
         **os.environ,
-        "BBHUNTER_BIN_DIR": str(bin_dir),
-        "BBHUNTER_SKIP_DEPS": "1",
+        "AGENTNARNA_BIN_DIR": str(bin_dir),
+        "AGENTNARNA_SKIP_DEPS": "1",
     }
     return subprocess.run(
         [BASH, os.path.join(REPO, script), *args],
@@ -42,12 +45,15 @@ def test_standalone_install_succeeds(tmp_path):
 
     assert "unbound variable" not in proc.stderr, proc.stderr
     assert proc.returncode == 0, proc.stderr
+    assert (bin_dir / "agentnarna").is_symlink()
     assert (bin_dir / "bughunter").is_symlink()
 
 
 def test_standalone_install_links_to_engine(tmp_path):
     bin_dir = tmp_path / "bin"
     _run("install.sh", ["--agent", "standalone"], bin_dir)
+    assert os.path.realpath(bin_dir / "agentnarna") == \
+        os.path.realpath(os.path.join(REPO, "bughunter", "engine.py"))
     assert os.path.realpath(bin_dir / "bughunter") == \
         os.path.realpath(os.path.join(REPO, "bughunter", "engine.py"))
 
@@ -57,17 +63,20 @@ def test_standalone_install_is_idempotent(tmp_path):
     _run("install.sh", ["--agent", "standalone"], bin_dir)
     proc = _run("install.sh", ["--agent", "standalone"], bin_dir)
     assert proc.returncode == 0, proc.stderr
+    assert (bin_dir / "agentnarna").is_symlink()
     assert (bin_dir / "bughunter").is_symlink()
 
 
 def test_standalone_uninstall_removes_the_command(tmp_path):
     bin_dir = tmp_path / "bin"
     _run("install.sh", ["--agent", "standalone"], bin_dir)
+    assert (bin_dir / "agentnarna").is_symlink()
     assert (bin_dir / "bughunter").is_symlink()
 
     proc = _run("uninstall.sh", ["--agent", "standalone", "--yes"], bin_dir)
     assert "unbound variable" not in proc.stderr, proc.stderr
     assert proc.returncode == 0, proc.stderr
+    assert not (bin_dir / "agentnarna").exists()
     assert not (bin_dir / "bughunter").exists()
 
 

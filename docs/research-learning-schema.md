@@ -134,11 +134,11 @@ Maps to `.github/ISSUE_TEMPLATE/false_positive.md` (flagged → candidate; why �
 
 - Readers accept schema_version ∈ {1, 2}
 - Writers emit 2
-- Offline: `tools/memory_migrate.py` (or later `bughunter memory migrate`) — copy-forward, never delete hunt-memory
+- Offline: `tools/memory_migrate.py` (or later `agentnarna memory migrate`) — copy-forward, never delete hunt-memory
 
 ## Non-goals (feature v1)
 
-Second memory DB, community share, auto GitHub PR, reputation/rankings, replacing 7Q gate, secrets storage, full product event enum, opportunity scoring, `bughunter update`/`version` (separate workstream).
+Second memory DB, community share, auto GitHub PR, reputation/rankings, replacing 7Q gate, secrets storage, full product event enum, opportunity scoring, `agentnarna update`/`version` (separate workstream).
 
 ## Coding sprint (7 tasks)
 

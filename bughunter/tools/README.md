@@ -86,7 +86,7 @@ bash tools/external_arsenal.sh                     # what's installed vs missing
 | `learn.py` | On-demand target learning from disclosed reports / NVD / GHSA |
 | `mindmap.py` | Mermaid mind map + prioritized hunting checklist from tech stack |
 | `dashboard.py` | Live ANSI TUI for recon/hunt phase progress |
-| `banner.py` / `banner.sh` | Shared CLI banner (gradient BUGHUNTER logo) |
+| `banner.py` / `banner.sh` | Shared AgentNarna CLI banner |
 
 ## Memory & Session
 
@@ -95,7 +95,7 @@ bash tools/external_arsenal.sh                     # what's installed vs missing
 | `memory_gc.py` | Inspect and rotate hunt-memory JSONL files (10 MB cap, 3 backups) |
 | `auth_session.py` | Auth header management across all tools (`--cookie` / `--bearer` / `--auth-file`) |
 | `credential_store.py` | Encrypted / `.env`-backed credential store for hunt sessions |
-| `_auth_helper.sh` | Bash helper that injects `BBHUNT_AUTH_*` into curl/httpx children |
+| `_auth_helper.sh` | Bash helper that injects `AGENTNARNA_AUTH_*` into curl/httpx children |
 
 ## Credential Attack (requires `--with-credential-attack`)
 

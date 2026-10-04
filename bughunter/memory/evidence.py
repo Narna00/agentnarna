@@ -23,7 +23,10 @@ See docs/phase3-evidence-provenance.md.
 
 from __future__ import annotations
 
-import fcntl
+try:
+    import fcntl
+except ImportError:  # Windows
+    from memory._fcntl_compat import fcntl
 import hashlib
 import json
 import os
@@ -31,6 +34,8 @@ import secrets
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from memory.file_lock import exclusive_path_lock
 
 from memory.redaction import redact_obj
 
@@ -200,9 +205,8 @@ class EvidenceStore:
         }
         # Hash and append under one lock so two writers cannot share a prev_hash,
         # and the head anchor is written before the lock is released.
-        fd = os.open(str(self.path), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX)
+        with exclusive_path_lock(self.path):
+            fd = os.open(str(self.path), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
             try:
                 prev, count = self._tail_state()
                 record["prev_hash"] = prev
@@ -216,9 +220,7 @@ class EvidenceStore:
                     written += n
                 self._write_head(record["digest"], count + 1)
             finally:
-                fcntl.flock(fd, fcntl.LOCK_UN)
-        finally:
-            os.close(fd)
+                os.close(fd)
         return record
 
     def link_finding(self, evidence_id: str, finding_id: str,

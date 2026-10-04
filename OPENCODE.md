@@ -1,4 +1,4 @@
-# Bug Bounty Hunter — OpenCode Guide
+# AgentNarna — OpenCode Guide
 
 This repo is a professional bug bounty hunting framework for OpenCode, covering HackerOne, Bugcrowd, Intigriti, and Immunefi.
 
@@ -19,21 +19,21 @@ You also need [OpenCode](https://opencode.ai) installed.
 ### Install
 
 ```bash
-git clone https://github.com/Awarexone/Agentic-Bug-Hunter.git
-cd Agentic-Bug-Hunter
+git clone https://github.com/YOUR_USERNAME/agentnarna.git
+cd agentnarna
 chmod +x install_tools.sh && ./install_tools.sh   # scanning tools
-chmod +x install.sh && ./install.sh --opencode    # skills + commands
+chmod +x install.sh && ./install.sh --agent opencode    # skills + commands
 ```
 
 The installer will:
-1. Symlink domain skills to `.opencode/skills/`
+1. Copy domain skills to `.opencode/skills/`
 2. Copy commands to `.opencode/commands/`
 3. Optionally write MCP server config to `opencode.json`
 
 ### Verify Installation
 
 ```bash
-cd Agentic-Bug-Hunter
+cd agentnarna
 opencode
 # Ask: "do you have bug bounty skills?"
 # Should confirm skills are loaded
@@ -101,7 +101,7 @@ Commands auto-invoke based on context.
 ### Quick Start
 
 ```bash
-cd Agentic-Bug-Hunter
+cd agentnarna
 opencode
 
 # In OpenCode:

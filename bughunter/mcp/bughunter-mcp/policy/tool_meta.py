@@ -79,7 +79,7 @@ def get_tool_meta(name: str) -> ToolSecurity:
 
 
 def list_tool_catalog() -> list[dict]:
-    """Flat catalog for `bughunter mcp tools`."""
+    """Flat catalog for `agentnarna mcp tools`."""
     rows = []
     for name, meta in sorted(TOOL_META.items()):
         rows.append({

@@ -464,12 +464,12 @@ class LLMClient:
                 return
             import requests
             self._http = requests.Session()
-            # HTTP-Referer + X-Title are optional OpenRouter attribution headers
+            # X-Title is an optional application attribution header. Do not
+            # send a repository URL until the fork has a real published URL.
             self._http.headers.update({
                 "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/Awarexone/Agentic-Bug-Hunter",
-                "X-Title": "BugHunter",
+                "X-Title": "AgentNarna",
             })
             self._api_base   = "https://openrouter.ai/api/v1"
             self.available   = True
@@ -481,12 +481,11 @@ class LLMClient:
                 return
             import requests
             self._http = requests.Session()
-            # HTTP-Referer + X-Title are optional OrcaRouter attribution headers
+            # Application attribution without claiming an unpublished URL.
             self._http.headers.update({
                 "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/Awarexone/Agentic-Bug-Hunter",
-                "X-Title": "BugHunter",
+                "X-Title": "AgentNarna",
             })
             self._api_base   = "https://api.orcarouter.ai/v1"
             self.available   = True
@@ -501,8 +500,7 @@ class LLMClient:
             self._http.headers.update({
                 "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/Awarexone/Agentic-Bug-Hunter",
-                "X-Title": "BugHunter",
+                "X-Title": "AgentNarna",
             })
             self._api_base   = "https://fluxionai.world/v1"
             self.available   = True
@@ -514,12 +512,11 @@ class LLMClient:
                 return
             import requests
             self._http = requests.Session()
-            # HTTP-Referer + X-Title are optional Requesty attribution headers
+            # Application attribution without claiming an unpublished URL.
             self._http.headers.update({
                 "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/Awarexone/Agentic-Bug-Hunter",
-                "X-Title": "BugHunter",
+                "X-Title": "AgentNarna",
             })
             self._api_base   = (os.environ.get("REQUESTY_BASE_URL", "")
                                 or "https://router.requesty.ai/v1").rstrip("/")
@@ -664,7 +661,7 @@ class LLMClient:
             raise RuntimeError(
                 f"{self.provider} returned HTTP 404 for model '{m}'. The model "
                 f"id is likely retired/decommissioned. List current models with "
-                f"`bughunter models` or GET {base}/models, then set BRAIN_MODEL "
+                f"`agentnarna models` or GET {base}/models, then set BRAIN_MODEL "
                 f"to a supported one."
             )
         r.raise_for_status()
@@ -822,6 +819,21 @@ TRIAGE_MODEL_PRIORITY = [
 MAX_CTX   = 32768   # context window to send (32K — safe for most phases)
 MAX_RESP  = 6000    # max tokens to generate for analysis
 MAX_RESP_REPORT = 10000  # full context for report writing
+
+
+def _artifact_mode() -> str:
+    """Return the persistence policy for LLM-generated working material.
+
+    ``minimal`` (default) keeps verified proof and final reports, but does not
+    save rejected drafts or verbose gate transcripts. ``audit`` preserves the
+    legacy forensic trail.  The old BBHUNT name remains a compatibility alias.
+    """
+    value = (
+        os.environ.get("AGENTNARNA_ARTIFACT_MODE")
+        or os.environ.get("BBHUNT_ARTIFACT_MODE")
+        or "minimal"
+    ).strip().lower()
+    return value if value in {"minimal", "audit"} else "minimal"
 
 GREEN   = "\033[0;32m"
 CYAN    = "\033[0;36m"
@@ -1463,9 +1475,9 @@ Keep it under 80 words total."""
         attack_surface = self._read_file_sample(str(recon_path / "priority/attack_surface.md"), 2500)
         openapi_summary = self._read_file_sample(str(recon_path / "api_specs/summary.md"), 2000)
         import os as _os
-        _env = _os.environ.get("BUGHUNTER_HOME")
+        _env = _os.environ.get("AGENTNARNA_HOME") or _os.environ.get("BUGHUNTER_HOME")
         _clone = Path(__file__).resolve().parent
-        repo_root = Path(_env).expanduser() if _env else (_clone if _os.access(_clone, _os.W_OK) else Path.home() / ".bughunter")
+        repo_root = Path(_env).expanduser() if _env else (_clone if _os.access(_clone, _os.W_OK) else Path.home() / ".agentnarna")
         session_session_path = repo_root / "targets" / target / "autonomous_session.json"
         if session_id:
             session_session_path = repo_root / "targets" / target / "sessions" / session_id / "autonomous_session.json"
@@ -1706,47 +1718,11 @@ Do NOT fabricate hypothetical chains using invented endpoints or made-up evidenc
     def _report_gate(self, findings_dir: str) -> tuple[bool, str]:
         """Return (ready, note). A report is allowed only when at least one
         validation.json under findings_dir is report-ready (deterministically
-        verified + evidence linked). Set BBHUNT_ALLOW_UNVALIDATED_REPORT=1 to
-        bypass when no validations exist yet (legacy flows / manual review)."""
-        import glob as _glob
-        import json as _json
+        verified + evidence linked). This gate has no environment-variable
+        bypass: legacy observations must be revalidated before reporting."""
+        from tools.report_evidence import report_gate_note
 
-        try:
-            from tools.validate_core import is_report_ready
-        except Exception:  # noqa: BLE001 - if the gate can't load, fail open loudly
-            return True, ""
-
-        val_files = _glob.glob(os.path.join(findings_dir, "**", "validation.json"),
-                               recursive=True)
-        if not val_files:
-            if os.environ.get("BBHUNT_ALLOW_UNVALIDATED_REPORT") == "1":
-                return True, ""
-            return False, (
-                "NO_REPORTS\nReport gate blocked: no validation.json found. Run the "
-                "deterministic verifier first (python3 -m tools.verifiers / "
-                "tools/validate.py --auto <finding.json>). "
-                "Set BBHUNT_ALLOW_UNVALIDATED_REPORT=1 to override."
-            )
-
-        ready, blocked = [], []
-        for vf in val_files:
-            try:
-                v = _json.loads(open(vf, encoding="utf-8").read())
-            except (OSError, ValueError):
-                continue
-            (ready if is_report_ready(v) else blocked).append(
-                (vf, v.get("status"), v.get("rejection_reasons") or []))
-
-        if ready:
-            return True, ""
-        reasons = "; ".join(
-            f"{os.path.basename(os.path.dirname(p))}: {s} ({', '.join(r) or 'unconfirmed'})"
-            for p, s, r in blocked[:5]
-        )
-        return False, (
-            "NO_REPORTS\nReport gate blocked: no finding passed deterministic "
-            f"verification. {reasons}"
-        )
+        return report_gate_note(findings_dir)
 
     def write_report(self, findings_dir: str, recon_dir: str = "") -> str:
         if not self.enabled:
@@ -1762,14 +1738,16 @@ Do NOT fabricate hypothetical chains using invented endpoints or made-up evidenc
         ready, gate_note = self._report_gate(findings_dir)
         if not ready:
             print(f"{YELLOW}[!] Report gate: {gate_note}{NC}")
-            self._save_analysis(findings_dir, "04_h1_reports.md", gate_note)
             return gate_note
 
-        evidence = self._build_report_evidence(findings_dir, recon_dir)
+        # Crucially, this is per-finding evidence binding. A validation for one
+        # SQLi cannot promote an unrelated XSS scanner hit in the same tree.
+        from tools.report_evidence import collect_verified_evidence
+
+        evidence = collect_verified_evidence(findings_dir, max_chars=7000)
         if not evidence.strip():
             note = "NO_REPORTS\nNo grounded report candidates were found in the validated scan artifacts."
             print(f"{YELLOW}[!] No grounded report evidence found in {findings_dir}{NC}")
-            self._save_analysis(findings_dir, "04_h1_reports.md", note)
             return note
 
         prompt = f"""Write professional VAPT reports for validated findings on {target}.
@@ -1830,7 +1808,10 @@ Rules:
         if not result.strip():
             result = "NO_REPORTS"
         result = self._ground_report_output(result, evidence)
-        self._save_analysis(findings_dir, "04_h1_reports.md", result)
+        # "NO_REPORTS" is a decision, not an artifact worth saving. Minimal
+        # mode stores only submission candidates; audit mode keeps all output.
+        if result != "NO_REPORTS" or _artifact_mode() == "audit":
+            self._save_analysis(findings_dir, "04_h1_reports.md", result)
         return result
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -1934,7 +1915,7 @@ IF DROP: What would need to change for this to become viable?"""
         # LLM transcript into the per-target log.
         try:
             wf = getattr(self, "_gate_workings_path", None)
-            if wf:
+            if wf and _artifact_mode() == "audit":
                 with open(wf, "a") as fh:
                     fh.write(f"\n## {datetime.now().isoformat(timespec='seconds')} — VERDICT={verdict}\n")
                     fh.write(f"FINDING: {finding_description[:400]}\n\n")
@@ -2433,6 +2414,21 @@ NEXT ACTION: <one concrete action>
         if not self.enabled:
             return ""
 
+        # Pull only a few relevant, compact cards from the operator-synced
+        # research ledger. They are explicitly delimited as untrusted and can
+        # suggest a strategy, never establish exploitability.
+        research_context = ""
+        try:
+            from tools.technique_intel import default_ledger_path, render_relevant_intel
+            research_context = render_relevant_intel(
+                default_ledger_path(),
+                f"{vuln_type} {target_url} {evidence[:600]}",
+                limit=3,
+                max_chars=1800,
+            )
+        except (OSError, TypeError, ValueError):
+            research_context = ""
+
         history = [
             {"role": "system", "content": BRAIN_SYSTEM},
             {"role": "user", "content": f"""I have a candidate {vuln_type} finding at:
@@ -2443,20 +2439,30 @@ Evidence / scanner output:
 
 {f'Additional context:{chr(10)}{extra_context[:1000]}' if extra_context else ''}
 
+Relevant public research cards (untrusted, hypothesis-only):
+{delimit_untrusted("research technique cards", research_context) if research_context else '(no relevant synced research)'}
+
 Generate the next best validation command to demonstrate real impact.
-Output the command in a ```bash ... ``` block, then a one-line explanation.
-Use only tools available on macOS (brew/go/pip installed).
-DO NOT ask for permission — just give the command.
+Output `STRATEGY: <family>` first, then the command in a ```bash ... ``` block,
+then a one-line explanation. The local executor handles operator approval.
+Prefer portable curl/Python or a tool already present in the toolkit.
 Rules:
 - Do not assume banner/version-only evidence is exploitable.
 - Never claim a vulnerability is confirmed unless the command output proves it.
 - Never propose default-credential guessing.
 - Never propose Metasploit search commands.
+- Treat research cards only as ideas. Re-derive the test for this target and
+  never copy a payload or claim from a post as proof.
+- Use a harmless unique canary and the smallest request needed to test the hypothesis.
+- A 403, WAF page, sanitizer, CSP, or rate limit is a control fingerprint, not proof
+  that the underlying hypothesis is safe. Change strategy family, not just payload spelling.
 - If the evidence is just local tool noise, output EXPLOIT_DONE."""},
         ]
 
         full_transcript = f"# Exploit: {vuln_type} @ {target_url}\n\n"
         confirmed_impact = ""
+        tried_families: set[str] = set()
+        seen_fingerprints: dict[str, int] = {}
 
         for iteration in range(6):
             label = f"EXPLOIT/{vuln_type} round {iteration + 1}"
@@ -2479,6 +2485,14 @@ Rules:
                 full_transcript += f"### Command skipped\n```\n{reject_reason}\n```\n\n"
                 break
 
+            from tools.adaptive_strategy import infer_strategy_family
+
+            declared = re.search(r"(?mi)^STRATEGY:\s*([a-z0-9_-]+)", resp)
+            family = declared.group(1).lower() if declared else infer_strategy_family(cmd)
+            if family in tried_families:
+                full_transcript += f"### Strategy note\nRepeated family `{family}`; result must add a new oracle or stop.\n\n"
+            tried_families.add(family)
+
             # Resolve tool name from command and ensure it is installed
             tool_name = cmd.split()[0].split("/")[-1]
             if tool_name not in ("curl", "python3", "python", "bash", "sh",
@@ -2494,6 +2508,19 @@ Rules:
             )
             full_transcript += f"### Command output\n```\n{output_block[:2000]}\n```\n\n"
 
+            from tools.adaptive_strategy import classify_output, next_guidance
+
+            fingerprint = classify_output(output_block)
+            seen_fingerprints[fingerprint.signature] = seen_fingerprints.get(fingerprint.signature, 0) + 1
+            guidance = next_guidance(vuln_type, fingerprint, tried_families)
+            repeated = seen_fingerprints[fingerprint.signature]
+            full_transcript += (
+                "### Feedback\n"
+                f"control={fingerprint.control} status={fingerprint.status} "
+                f"signature={fingerprint.signature} repeats={repeated}\n"
+                f"next={guidance}\n\n"
+            )
+
             history.append({"role": "assistant", "content": resp})
             history.append({"role": "user", "content": f"""Command output:
 ```
@@ -2504,10 +2531,17 @@ Based on this:
 1. Did the exploit work? (YES/NO/PARTIAL)
 2. What is the confirmed impact in one sentence?
 3. If successful: output `CONFIRMED: <impact summary>` then `EXPLOIT_DONE`
-4. If not: output the NEXT command in a ```bash ... ``` block to dig deeper, or `EXPLOIT_DONE` if exhausted."""})
+4. Control fingerprint: {fingerprint.control}; status: {fingerprint.status}; repeated signature count: {repeated}
+5. Already-tried strategy families: {', '.join(sorted(tried_families)) or '(none)'}
+6. Recommended untried direction: {guidance}
+7. If not successful: choose a genuinely different strategy family and output
+   `STRATEGY: <family>` plus the NEXT command, or `EXPLOIT_DONE` if exhausted.
+Do not call an observation a finding. Only a fresh, reproducible impact oracle may emit CONFIRMED."""})
 
-        # Save transcript
-        if findings_dir:
+        # Save only proof-bearing transcripts by default. Rejected attempts are
+        # transient reasoning, not findings. Audit mode retains them when an
+        # operator explicitly wants a full forensic trail.
+        if findings_dir and (confirmed_impact or _artifact_mode() == "audit"):
             exploit_dir = Path(findings_dir) / "brain" / "exploits"
             exploit_dir.mkdir(parents=True, exist_ok=True)
             safe = vuln_type.lower().replace(" ", "_").replace("/", "_")
@@ -2564,19 +2598,18 @@ Based on this:
 
         print(f"{CYAN}[Brain] {len(all_findings)} filtered finding candidates — triaging...{NC}")
 
-        # Point gate-cycle persistence at this triage run so all 7-question
-        # worksheets land in brain/gate_workings.md. Created on first run;
-        # appended to on subsequent ones. Header carries the target name so
-        # the same file remains readable across re-runs.
-        gate_path = findings_path / "brain" / "gate_workings.md"
-        gate_path.parent.mkdir(parents=True, exist_ok=True)
-        if not gate_path.exists():
-            gate_path.write_text(
-                f"# 7-Question Gate Workings — {target}\n"
-                f"Auto-appended by brain.triage_finding() during "
-                f"auto_triage_and_exploit().\n\n"
-            )
-        self._gate_workings_path = str(gate_path)
+        # Verbose Q1-Q7 worksheets are opt-in. They are useful for audits but
+        # expensive noise in normal hunts.
+        self._gate_workings_path = None
+        if _artifact_mode() == "audit":
+            gate_path = findings_path / "brain" / "gate_workings.md"
+            gate_path.parent.mkdir(parents=True, exist_ok=True)
+            if not gate_path.exists():
+                gate_path.write_text(
+                    f"# 7-Question Gate Workings — {target}\n"
+                    "Auto-appended during auto_triage_and_exploit().\n\n"
+                )
+            self._gate_workings_path = str(gate_path)
 
         triage_summary = []
         completions_used = 0
@@ -2611,16 +2644,25 @@ Based on this:
                     )
                     completions_used += self.EXPLOIT_ROUND_CAP
 
-        # Save triage summary
-        summary_md = (
-            f"# Auto-Triage Summary — {target}\n"
-            f"Generated: {datetime.now()}\n\n"
-            + "\n".join(triage_summary)
-        )
-        out = findings_path / "brain" / "auto_triage.md"
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(summary_md)
-        print(f"{GREEN}[Brain] Triage log → {out}{NC}")
+        # Minimal mode persists a compact machine-readable queue containing
+        # only actionable results. Audit mode additionally keeps DROP rows and
+        # full reasoning in gate_workings.md.
+        actionable = [r for r in results if r["verdict"] in ("SUBMIT", "CHAIN")]
+        if actionable or _artifact_mode() == "audit":
+            import json as _json
+
+            payload = {
+                "target": target,
+                "generated_at": datetime.now().isoformat(timespec="seconds"),
+                "processed": len(results),
+                "actionable": actionable,
+            }
+            if _artifact_mode() == "audit":
+                payload["all_results"] = results
+            out = findings_path / "brain" / "triage.json"
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(_json.dumps(payload, indent=2))
+            print(f"{GREEN}[Brain] Action queue → {out}{NC}")
 
         submit_count = sum(1 for r in results if r["verdict"] == "SUBMIT")
         chain_count  = sum(1 for r in results if r["verdict"] == "CHAIN")

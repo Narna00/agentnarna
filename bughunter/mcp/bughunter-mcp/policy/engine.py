@@ -57,7 +57,11 @@ class PolicyEngine:
         if self._domains:
             self.set_scope(self._domains, excluded_domains)
         if auto_approve is None:
-            auto_approve = os.environ.get("BBHUNT_MCP_APPROVE", "").strip().lower() in {
+            approve_env = (
+                os.environ.get("AGENTNARNA_MCP_APPROVE")
+                or os.environ.get("BBHUNT_MCP_APPROVE", "")
+            )
+            auto_approve = approve_env.strip().lower() in {
                 "1", "true", "yes",
             }
         self.auto_approve = auto_approve
@@ -107,7 +111,10 @@ class PolicyEngine:
         if args.get("approve") is True:
             return True
         token = str(args.get("approval_token") or "").strip()
-        expected = os.environ.get("BBHUNT_MCP_APPROVAL_TOKEN", "").strip()
+        expected = (
+            os.environ.get("AGENTNARNA_MCP_APPROVAL_TOKEN")
+            or os.environ.get("BBHUNT_MCP_APPROVAL_TOKEN", "")
+        ).strip()
         return bool(expected and token and token == expected)
 
     def authorize_tool(self, tool: str, args: dict[str, Any]) -> Decision:
@@ -153,7 +160,7 @@ class PolicyEngine:
                 return Decision(
                     DecisionKind.REQUIRE_APPROVAL,
                     "Active testing requires approval "
-                    "(pass approve=true or set BBHUNT_MCP_APPROVE=1)",
+                    "(pass approve=true or set AGENTNARNA_MCP_APPROVE=1)",
                     ACTIVE_TEST_APPROVAL_REQUIRED,
                     {"tool": tool, "target": target, "level": meta.approval_level.value},
                 )

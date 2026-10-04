@@ -2,8 +2,9 @@
 Auth-session layer — load credentials once, plumb them through the entire hunt.
 
 Three input sources (any combination, deduped):
-  1. Environment vars:  BBHUNT_AUTH_HEADER (repeatable via newlines),
-                        BBHUNT_COOKIE, BBHUNT_BEARER, BBHUNT_API_KEY
+  1. Environment vars:  AGENTNARNA_AUTH_HEADER (repeatable via newlines),
+                        AGENTNARNA_COOKIE, AGENTNARNA_BEARER,
+                        AGENTNARNA_API_KEY
   2. JSON file:         {"headers": ["Cookie: x", "X-Foo: y"]}
                         or {"cookie": "...", "bearer": "...", "api_key": "..."}
   3. CLI args:          --auth-header "Name: value" (repeatable),
@@ -12,7 +13,7 @@ Three input sources (any combination, deduped):
 Output: an AuthSession that produces
   • a Python dict of headers (for SDK callers)
   • a list[str] of `-H` args (for subprocess.run with shell=False)
-  • two env vars (BBHUNT_AUTH_HEADERS, BBHUNT_SESSION_ID) consumed by
+  • two env vars (AGENTNARNA_AUTH_HEADERS, AGENTNARNA_SESSION_ID) consumed by
     tools/_auth_helper.sh in bash callers
   • a stable session_id = sha256(sorted_canonical_headers)[:12]
 
@@ -31,13 +32,27 @@ from pathlib import Path
 
 _HEADER_RE = re.compile(r"^([A-Za-z0-9!#$%&'*+\-.^_`|~]+)\s*:\s*(.+)$")
 
-ENV_HEADERS = "BBHUNT_AUTH_HEADERS"  # newline-separated, set by Python for bash
-ENV_SESSION_ID = "BBHUNT_SESSION_ID"
+ENV_HEADERS = "AGENTNARNA_AUTH_HEADERS"  # newline-separated, set by Python for bash
+ENV_SESSION_ID = "AGENTNARNA_SESSION_ID"
 
-ENV_HEADER_IN = "BBHUNT_AUTH_HEADER"  # input: newline-separated
-ENV_COOKIE = "BBHUNT_COOKIE"
-ENV_BEARER = "BBHUNT_BEARER"
-ENV_API_KEY = "BBHUNT_API_KEY"
+ENV_HEADER_IN = "AGENTNARNA_AUTH_HEADER"  # input: newline-separated
+ENV_COOKIE = "AGENTNARNA_COOKIE"
+ENV_BEARER = "AGENTNARNA_BEARER"
+ENV_API_KEY = "AGENTNARNA_API_KEY"
+
+# Old releases exposed BBHUNT_* publicly. Read and emit those names during the
+# migration window so an updated clone can still drive older helper scripts.
+LEGACY_ENV_HEADERS = "BBHUNT_AUTH_HEADERS"
+LEGACY_ENV_SESSION_ID = "BBHUNT_SESSION_ID"
+LEGACY_ENV_HEADER_IN = "BBHUNT_AUTH_HEADER"
+LEGACY_ENV_COOKIE = "BBHUNT_COOKIE"
+LEGACY_ENV_BEARER = "BBHUNT_BEARER"
+LEGACY_ENV_API_KEY = "BBHUNT_API_KEY"
+
+
+def _env_value(env: dict[str, str], primary: str, legacy: str) -> str:
+    """Return the primary setting, falling back to its legacy alias."""
+    return env.get(primary) or env.get(legacy, "")
 
 
 class AuthSession:
@@ -94,18 +109,21 @@ class AuthSession:
     def from_env(cls, env: dict[str, str] | None = None) -> "AuthSession":
         env = env if env is not None else os.environ
         s = cls()
-        raw = env.get(ENV_HEADER_IN, "")
+        raw = _env_value(env, ENV_HEADER_IN, LEGACY_ENV_HEADER_IN)
         if raw:
             for line in raw.splitlines():
                 line = line.strip()
                 if line and not line.startswith("#"):
                     s.add_header(line)
-        if env.get(ENV_COOKIE):
-            s.add_cookie(env[ENV_COOKIE])
-        if env.get(ENV_BEARER):
-            s.add_bearer(env[ENV_BEARER])
-        if env.get(ENV_API_KEY):
-            s.add_api_key(env[ENV_API_KEY])
+        cookie = _env_value(env, ENV_COOKIE, LEGACY_ENV_COOKIE)
+        bearer = _env_value(env, ENV_BEARER, LEGACY_ENV_BEARER)
+        api_key = _env_value(env, ENV_API_KEY, LEGACY_ENV_API_KEY)
+        if cookie:
+            s.add_cookie(cookie)
+        if bearer:
+            s.add_bearer(bearer)
+        if api_key:
+            s.add_api_key(api_key)
         return s
 
     @classmethod
@@ -142,13 +160,13 @@ class AuthSession:
             k, v = line.split("=", 1)
             k = k.strip()
             v = v.strip().strip('"').strip("'")
-            if k == ENV_COOKIE or k == "COOKIE":
+            if k in (ENV_COOKIE, LEGACY_ENV_COOKIE, "COOKIE"):
                 s.add_cookie(v)
-            elif k == ENV_BEARER or k in ("BEARER", "TOKEN"):
+            elif k in (ENV_BEARER, LEGACY_ENV_BEARER, "BEARER", "TOKEN"):
                 s.add_bearer(v)
-            elif k == ENV_API_KEY or k == "API_KEY":
+            elif k in (ENV_API_KEY, LEGACY_ENV_API_KEY, "API_KEY"):
                 s.add_api_key(v)
-            elif k == ENV_HEADER_IN or k == "AUTH_HEADER":
+            elif k in (ENV_HEADER_IN, LEGACY_ENV_HEADER_IN, "AUTH_HEADER"):
                 # value may itself contain newlines (rare); split safely
                 for h in v.splitlines():
                     s.add_header(h)
@@ -206,7 +224,7 @@ class AuthSession:
 
         Matches the bash fallback in _auth_helper.sh — both hash
         `sorted_headers_joined_by_newline + final_newline` so a Python-set
-        BBHUNT_SESSION_ID and a bash-computed one are interchangeable.
+        AGENTNARNA_SESSION_ID and a bash-computed one are interchangeable.
         """
         if not self._headers:
             return ""
@@ -219,9 +237,13 @@ class AuthSession:
         """Env vars to pass to subprocesses so bash callers can pick them up."""
         if self.is_empty():
             return {}
+        headers = "\n".join(self._headers)
+        session_id = self.session_id()
         return {
-            ENV_HEADERS: "\n".join(self._headers),
-            ENV_SESSION_ID: self.session_id(),
+            ENV_HEADERS: headers,
+            ENV_SESSION_ID: session_id,
+            LEGACY_ENV_HEADERS: headers,
+            LEGACY_ENV_SESSION_ID: session_id,
         }
 
     def export_to_env(self, env: dict[str, str] | None = None) -> None:
@@ -233,8 +255,11 @@ class AuthSession:
         else:
             # Clear any stale values so a downstream tool doesn't pick up
             # an old session by accident.
-            target.pop(ENV_HEADERS, None)
-            target.pop(ENV_SESSION_ID, None)
+            for name in (
+                ENV_HEADERS, ENV_SESSION_ID,
+                LEGACY_ENV_HEADERS, LEGACY_ENV_SESSION_ID,
+            ):
+                target.pop(name, None)
 
     def redacted(self) -> dict[str, str]:
         """Human-safe view: shows header names + masked values."""

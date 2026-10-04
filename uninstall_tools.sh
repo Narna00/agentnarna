@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Bug Bounty Tool Uninstaller
+# AgentNarna External Tool Uninstaller
 # Removes all tools that install_tools.sh installed
 # Usage: ./uninstall_tools.sh [--yes] [--with-templates]
 #
@@ -55,7 +55,7 @@ GOPATH="${GOPATH:-$HOME/go}"
 
 # ─────────────────────────────────────────────────────────────────────────────
 echo "============================================="
-echo "  Bug Bounty Tool Uninstaller"
+echo "  AgentNarna External Tool Uninstaller"
 echo "============================================="
 echo ""
 echo "The following will be removed:"

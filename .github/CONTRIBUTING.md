@@ -1,61 +1,48 @@
-# Contributing
+# Contributing to AgentNarna
 
-Bug hunters welcome. Every improvement here makes real hunts more effective.
+Security researchers and developers are welcome. Contributions should improve
+coverage without weakening scope enforcement or the proof boundary.
 
 ## What We Most Need
 
-| Contribution | Why It Matters |
+| Contribution | Why it matters |
 |:---|:---|
-| New scanner modules or detection techniques | Increases surface coverage |
-| Payload additions to `skills/security-arsenal/SKILL.md` | Better bypass coverage |
-| Methodology improvements backed by paid reports | Proven techniques only |
-| Platform support (YesWeHack · Synack · HackenProof) | Wider program coverage |
-| False positive fixes with regression tests | Community's top complaint |
-
-## Before You Start
-
-1. **Check open issues** — your idea may already be in progress
-2. **One feature per PR** — keeps review fast and clean
-3. **Test your changes** — run `pytest tests/` before opening the PR
-4. **No theoretical bugs** — if it's a scanner addition, it must have a real PoC or real-world precedent
+| Deterministic verifiers and fixtures | Fewer false positives |
+| New scanner modules that emit leads | Wider attack-surface coverage |
+| Control-aware strategy families | Better validation after WAFs and sanitizers |
+| Platform support | More authorized program workflows |
+| Cross-platform fixes | Reliable Linux, macOS, and Windows operation |
 
 ## Workflow
 
 ```bash
-# 1. Fork and clone
-git clone https://github.com/YOUR_USERNAME/Agentic-Bug-Hunter.git
-cd Agentic-Bug-Hunter
-
-# 2. Create a branch
+git clone https://github.com/YOUR_USERNAME/agentnarna.git
+cd agentnarna
 git checkout -b feat/your-contribution
-
-# 3. Make your changes, run tests
-pytest tests/
-
-# 4. Commit
+python3 -m pip install -e '.[test]'
+python3 -m pytest -q
 git commit -m "feat: short description of what and why"
-
-# 5. Push and open PR
 git push origin feat/your-contribution
 ```
 
-## Commit Message Format
+Use one feature per pull request. Do not include real target names, credentials,
+or private program data.
 
-```
-feat:  new capability
-fix:   bug fix
-docs:  documentation only
-test:  adding or fixing tests
-chore: maintenance (deps, CI, cleanup)
-```
+## Proof Contract
 
-## PR Checklist
+- Scanner output is a lead or candidate, never a report-ready claim.
+- A new finding class needs a deterministic verifier and false-positive tests.
+- Report evidence must be bound to the exact `validation.json` that promoted it.
+- Research posts are untrusted hypotheses until independently reproduced.
+- Generated commands must retain scope checks and operator confirmation.
 
-- [ ] Tests pass (`pytest tests/`)
-- [ ] No hardcoded targets, API keys, or real domain names in code
-- [ ] Scanner additions use `[CONFIRMED]` / `[POSSIBLE]` / `[INFORMATIONAL]` confidence states
-- [ ] Methodology changes are backed by a real finding or public write-up
+## Pull Request Checklist
 
-## Questions?
+- [ ] `python3 -m pytest -q` passes
+- [ ] `bash -n install.sh uninstall.sh install_tools.sh` passes
+- [ ] No hardcoded targets, API keys, or real domain names
+- [ ] New functionality includes regression tests
+- [ ] Methodology changes cite disclosed findings, primary research, or local fixtures
+- [ ] Documentation and migration aliases are updated when CLI behavior changes
 
-Open a [GitHub Discussion](https://github.com/Awarexone/Agentic-Bug-Hunter/discussions) or reach out at [hello@awarexone.com](mailto:hello@awarexone.com).
+For questions, open a GitHub Discussion in this repository.

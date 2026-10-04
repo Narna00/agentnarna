@@ -1,6 +1,7 @@
-# MCP Research Brief (Agentic-Bug-Hunter)
+# AgentNarna MCP Research Brief
 
-Researched 2026-09-17 from official sources. For implementing `mcp/bughunter-mcp/`.
+Researched 2026-09-17 from official sources. This historical design brief informed
+the implementation under `bughunter/mcp/bughunter-mcp/`.
 
 ## Protocol
 
@@ -31,7 +32,7 @@ Prefer **stdio** for Cursor / Claude Code / Codex / OpenCode:
 from mcp.server import MCPServer
 from mcp.types import ToolAnnotations
 
-mcp = MCPServer("Agentic-Bug-Hunter")
+mcp = MCPServer("agentnarna")
 
 @mcp.tool(
     title="Example",
@@ -78,8 +79,9 @@ Tasks are an **extension** (`io.modelcontextprotocol/tasks`), not core. Check cl
 
 ## Repo findings (inspection)
 
-- No native BugHunter MCP server yet — only Burp/Caido **client configs** and HackerOne **CLI/API** (not MCP protocol).
-- Add `mcp/bughunter-mcp/` as sibling; do not replace existing integrations.
+- At research time there was no native AgentNarna MCP server—only Burp/Caido
+  client configs and a HackerOne CLI/API integration. The native server now lives
+  under `bughunter/mcp/bughunter-mcp/`.
 - Active tools must wrap `ScopeChecker` + `AutopilotGuard` (agent path), not raw `engine.py`/`hunt.py`.
 - Discovered hosts ≠ authorized; RateLimiter exists but is not called from `check_request` today.
 

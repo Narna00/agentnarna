@@ -24,22 +24,23 @@ GOOD: "An attacker can access any user's order history by changing the user_id
 
 ## PERSISTENCE RULE
 
-Every report-writing session must leave a complete finding folder on disk. Save
-the report draft, pre-submit checklist, references, downgrade counters, and final
-submission note under `findings/<target-or-program>-<bug-class>/`. Never rely on
-terminal or tmux scrollback for content the hunter needs later.
+Default to minimal persistence: save the exact validation record, linked proof,
+and a final submission candidate. Do not save `NO_REPORTS`, rejected drafts,
+generic observations, duplicate checklists, or model working. Preserve the full
+draft/checklist/reasoning trail only when the operator explicitly selects audit
+mode. A report writer must never read unlinked scanner artifacts merely because
+some other validation in the directory passed.
 
 Minimum files:
 
 ```text
 findings/<target-or-program>-<bug-class>/
-├── hackerone-report.md       # or bugcrowd-report.md / intigriti-report.md / immunefi-report.md
-├── submission-notes.md       # final checklist, references, caveats, next action
-└── evidence/                 # screenshots, curl output, response bodies when available
+├── validation.json           # deterministic verifier verdict + evidence links
+├── hackerone-report.md       # or the selected platform's final report
+└── evidence/                 # only proof used by this finding
 ```
 
-If `tools/validate.py` already wrote `submission-notes.md`, append/update it
-instead of creating a duplicate.
+Audit mode may additionally retain a pre-submit checklist and reasoning trace.
 
 ---
 

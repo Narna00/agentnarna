@@ -179,15 +179,15 @@ def expand_cidr(cidr: str, max_hosts: int = MAX_CIDR_HOSTS) -> list[str]:
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(TOOLS_DIR)
-# Writable output honors BUGHUNTER_HOME (falls back to the install dir when it is
-# writable — a git clone — else ~/.bughunter for a read-only pip install).
+# Writable output honors AGENTNARNA_HOME and the legacy BUGHUNTER_HOME alias.
+# It falls back to the clone when writable, else ~/.agentnarna.
 def _bh_home():
-    env = os.environ.get("BUGHUNTER_HOME")
+    env = os.environ.get("AGENTNARNA_HOME") or os.environ.get("BUGHUNTER_HOME")
     if env:
         return os.path.expanduser(env)
     if os.access(BASE_DIR, os.W_OK):
         return BASE_DIR
-    return os.path.join(os.path.expanduser("~"), ".bughunter")
+    return os.path.join(os.path.expanduser("~"), ".agentnarna")
 _DATA_HOME = _bh_home()
 TARGETS_DIR = os.path.join(_DATA_HOME, "targets")
 RECON_DIR = os.path.join(_DATA_HOME, "recon")
@@ -307,29 +307,46 @@ def run_cmd(cmd, cwd=None, timeout=600):
     is killed via os.killpg, preventing orphan processes from accumulating
     during long-running hunts.
     """
+    if (
+        os.name == "nt" and isinstance(cmd, (list, tuple)) and cmd
+        and str(cmd[0]).lower() == "echo"
+    ):
+        return True, " ".join(str(part) for part in cmd[1:]) + "\n"
+
     use_shell = isinstance(cmd, str)
     proc = None
     try:
+        group_args = (
+            {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+            if os.name == "nt"
+            else {"preexec_fn": os.setsid}
+        )
         proc = subprocess.Popen(
             cmd, shell=use_shell, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            text=True, cwd=cwd, preexec_fn=os.setsid,
+            text=True, cwd=cwd, **group_args,
         )
         stdout, _ = proc.communicate(timeout=timeout)
         return proc.returncode == 0, stdout or ""
     except subprocess.TimeoutExpired:
         if proc is not None:
-            try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            except OSError:
+            if os.name == "nt":
                 proc.kill()
+            else:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except OSError:
+                    proc.kill()
             proc.wait()
         return False, f"Command timed out after {timeout}s: {str(cmd)[:120]}"
     except Exception as e:
         if proc is not None:
-            try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            except OSError:
+            if os.name == "nt":
                 proc.kill()
+            else:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except OSError:
+                    proc.kill()
             proc.wait()
         return False, f"Command failed ({type(e).__name__}): {e}"
 
@@ -1030,7 +1047,7 @@ Examples:
             parser.error(f"unsafe scope configuration: {exc}")
 
     # Build the auth session once. It propagates to every subprocess via
-    # BBHUNT_AUTH_HEADERS / BBHUNT_SESSION_ID env vars (set per-call so the
+    # AGENTNARNA_AUTH_HEADERS / AGENTNARNA_SESSION_ID env vars (set per-call so the
     # session_id is consistent across recon, scan, and audit log entries).
     global _AUTH_SESSION
     _AUTH_SESSION = session_from_args(args)
@@ -1039,7 +1056,8 @@ Examples:
     # shouldn't print a splash) and when explicitly disabled.
     _banner_suppressed = args.no_banner or args.status or args.setup_wordlists
     if args.no_banner:
-        os.environ["BBHUNT_NO_BANNER"] = "1"
+        os.environ["AGENTNARNA_NO_BANNER"] = "1"
+        os.environ["BBHUNT_NO_BANNER"] = "1"  # legacy helpers
     if not _banner_suppressed:
         print_banner(
             "Bug Bounty Automation Pipeline",

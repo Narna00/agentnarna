@@ -1,10 +1,10 @@
-# Bug Bounty Agent Toolkit — Plugin Guide
+# agentnarna — Plugin Guide
 
 This repo is an agent-portable bug bounty plugin for professional hunting across HackerOne, Bugcrowd, Intigriti, and Immunefi. It supports Claude Code, OpenCode, Pi Agent, Codex-style Agent Skills, and shared `.agents/skills` harnesses.
 
 ## What's Here
 
-### Skills (13 domains — load with `/bug-bounty`, `/web2-recon`, `/token-scan`, etc.)
+### Skills (load with `/bug-bounty`, `/web2-recon`, `/token-scan`, etc.)
 
 | Skill | Domain |
 |---|---|
@@ -23,6 +23,8 @@ This repo is an agent-portable bug bounty plugin for professional hunting across
 | `skills/graphql-audit/` | GraphQL hunting — introspection, field suggestions, batching DoS, IDOR via aliasing, injection |
 | `skills/mcp-server-audit/` | MCP server audit — tool poisoning, param→sink injection, missing approval gates, secret leaks, rug-pull/confused-deputy, transport config |
 | `skills/cloud-pentest/` | Post-access cloud exploitation (AWS/GCP/Azure) — IAM enum + privesc, IMDS metadata creds, impersonation, bucket takeover, secrets harvest, impact proof |
+| `skills/adaptive-exploit-validation/` | Feedback-driven validation after 403/WAF/sanitizer/CSP/rate controls; proof-or-suppress loop |
+| `skills/research-intelligence/` | Source-linked Medium/X/RSS/article intelligence; hypothesis-only until live verification |
 
 ### Commands (slash commands)
 
@@ -146,3 +148,5 @@ Install for another harness:
 4. KILL weak findings fast — N/A hurts your validity ratio
 5. 5-minute rule — nothing after 5 min = move on
 6. **LEAD BOARD — never lose a lead.** After recon, run `lead_board.py ingest <target>` + `show`, and route each finding to its `hunt-*` skill in plain language ("GraphQL endpoint → hunt-graphql"). When starting/killing/reporting a lead, `touch` its status. The hunter focuses on one lead at a time; the board remembers the rest so none is forgotten. Surface stale high-priority leads unprompted.
+7. **PROOF BINDING — one validation unlocks only its own linked evidence.** Never pass neighboring scanner artifacts to the report writer.
+8. **MINIMAL ARTIFACTS — default to compact state, verified proof, and final reports.** Full drafts and reasoning require audit mode.

@@ -1,11 +1,11 @@
 {
   "mcp": {
-    "bughunter": {
+    "agentnarna": {
       "type": "local",
       "enabled": true,
-      "command": ["bughunter", "mcp", "serve"],
+      "command": ["agentnarna", "mcp", "serve"],
       "environment": {
-        "BBHUNT_MCP_APPROVE": "0"
+        "AGENTNARNA_MCP_APPROVE": "0"
       }
     }
   }

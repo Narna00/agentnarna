@@ -1,9 +1,15 @@
-"""engine.py's save_config() must write ~/.bughunter/config.json with
+"""engine.py's save_config() must write the AgentNarna config with
 0600 permissions, since it stores provider API keys in plaintext. See
 SECURITY-REVIEW-2026-08-22.md finding #12."""
 import os
 import stat
 import sys
+
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    os.name == "nt", reason="Windows does not expose POSIX owner-only mode bits"
+)
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if REPO_ROOT not in sys.path:

@@ -27,7 +27,8 @@ You are an autonomous bug bounty hunter. You execute the full hunt loop systemat
 
 Most paying bugs sit behind a login. If the user provides a session (via
 `--auth-file .private/foo.json`, `--cookie '...'`, `--bearer '...'`, or
-`BBHUNT_*` env vars), every downstream tool — httpx, katana, ffuf, nuclei,
+`AGENTNARNA_*` env vars, with `BBHUNT_*` compatibility aliases), every
+downstream tool—httpx, katana, ffuf, nuclei,
 dalfox, the SQLi / SSTI / upload PoC verifiers — automatically sends those
 headers. See `docs/auth-sessions.md`.
 
@@ -194,7 +195,7 @@ Every request generates an audit entry:
 
 `session_id` is a 12-char sha256 prefix of the auth headers (or your manual
 session label). When auth is loaded, it's set automatically from
-`BBHUNT_SESSION_ID`. Same credential = same hash across runs, so you can
+`AGENTNARNA_SESSION_ID`. Same credential = same hash across runs, so you can
 correlate findings to a specific identity without ever writing the secret
 to disk.
 

@@ -1,15 +1,9 @@
 {
-  "name": "agentic-bug-hunter",
-  "description": "AI-powered bug bounty toolkit — recon, vulnerability hunting, validation gates, and submission-ready reports for HackerOne, Bugcrowd, Intigriti, and Immunefi.",
-  "version": "6.0.1",
+  "name": "agentnarna",
+  "description": "Evidence-first authorized pentesting toolkit with adaptive validation and verified-only reporting.",
+  "version": "0.1.0",
   "author": {
-    "name": "AwareXone",
-    "url": "https://awarexone.com"
-  },
-  "homepage": "https://github.com/Awarexone/Agentic-Bug-Hunter",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Awarexone/Agentic-Bug-Hunter.git"
+    "name": "AgentNarna contributors"
   },
   "license": "MIT",
   "keywords": [

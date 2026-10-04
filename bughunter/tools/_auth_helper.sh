@@ -2,8 +2,9 @@
 # =============================================================================
 # Auth-helper — sourced by recon_engine.sh, vuln_scanner.sh, full_hunt.sh.
 #
-# Reads BBHUNT_AUTH_HEADERS (newline-separated "Name: value" entries) and
-# BBHUNT_SESSION_ID from the environment, exposes them as:
+# Reads AGENTNARNA_AUTH_HEADERS (newline-separated "Name: value" entries) and
+# AGENTNARNA_SESSION_ID from the environment. BBHUNT_* remains a fallback.
+# The helper exposes them as:
 #
 #   BB_AUTH_ARGS=(-H 'Name1: value1' -H 'Name2: value2' ...)    # bash array
 #   BB_AUTH_SESSION_ID="<12-char-hex>"                          # safe to log
@@ -26,9 +27,10 @@
 }
 
 BB_AUTH_ARGS=()
-BB_AUTH_SESSION_ID="${BBHUNT_SESSION_ID:-}"
+_bb_headers="${AGENTNARNA_AUTH_HEADERS:-${BBHUNT_AUTH_HEADERS:-}}"
+BB_AUTH_SESSION_ID="${AGENTNARNA_SESSION_ID:-${BBHUNT_SESSION_ID:-}}"
 
-if [ -n "${BBHUNT_AUTH_HEADERS:-}" ]; then
+if [ -n "$_bb_headers" ]; then
     # Read newline-separated headers into the array. Use here-string + read
     # so this works on bash 3.2 (no mapfile).
     while IFS= read -r _bb_h; do
@@ -43,7 +45,7 @@ if [ -n "${BBHUNT_AUTH_HEADERS:-}" ]; then
             *$'\r'*) continue ;;
         esac
         BB_AUTH_ARGS+=(-H "$_bb_h")
-    done <<< "$BBHUNT_AUTH_HEADERS"
+    done <<< "$_bb_headers"
     unset _bb_h
 
     # Compute session_id if caller didn't already export one.
@@ -52,15 +54,16 @@ if [ -n "${BBHUNT_AUTH_HEADERS:-}" ]; then
     if [ -z "$BB_AUTH_SESSION_ID" ]; then
         _bb_hash=""
         if command -v shasum >/dev/null 2>&1; then
-            _bb_hash=$(printf '%s' "$BBHUNT_AUTH_HEADERS" | LC_ALL=C sort | shasum -a 256 2>/dev/null | cut -c1-12)
+            _bb_hash=$(printf '%s' "$_bb_headers" | LC_ALL=C sort | shasum -a 256 2>/dev/null | cut -c1-12)
         elif command -v sha256sum >/dev/null 2>&1; then
-            _bb_hash=$(printf '%s' "$BBHUNT_AUTH_HEADERS" | LC_ALL=C sort | sha256sum 2>/dev/null | cut -c1-12)
+            _bb_hash=$(printf '%s' "$_bb_headers" | LC_ALL=C sort | sha256sum 2>/dev/null | cut -c1-12)
         fi
         BB_AUTH_SESSION_ID="$_bb_hash"
-        export BBHUNT_SESSION_ID="$_bb_hash"
+        export AGENTNARNA_SESSION_ID="$_bb_hash" BBHUNT_SESSION_ID="$_bb_hash"
         unset _bb_hash
     fi
 fi
+unset _bb_headers
 
 # Banner — only shows session_id, never raw values.
 bb_auth_banner() {

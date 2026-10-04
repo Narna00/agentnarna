@@ -1,4 +1,4 @@
-"""Tests for BugHunter MCP policy layer and adapters (no live network)."""
+"""Tests for the AgentNarna MCP policy layer and adapters (no live network)."""
 
 from __future__ import annotations
 
@@ -57,6 +57,28 @@ def test_approve_allows():
     d = p.authorize_tool(
         "bughunter_hunt",
         {"target": "app.example.com", "scope_domains": ["*.example.com"], "approve": True},
+    )
+    assert d.allowed
+
+
+def test_agentnarna_approval_env_allows(monkeypatch):
+    monkeypatch.setenv("AGENTNARNA_MCP_APPROVE", "1")
+    monkeypatch.delenv("BBHUNT_MCP_APPROVE", raising=False)
+    p = PolicyEngine(domains=["*.example.com"])
+    d = p.authorize_tool(
+        "bughunter_hunt",
+        {"target": "app.example.com", "scope_domains": ["*.example.com"]},
+    )
+    assert d.allowed
+
+
+def test_legacy_approval_env_still_allows(monkeypatch):
+    monkeypatch.delenv("AGENTNARNA_MCP_APPROVE", raising=False)
+    monkeypatch.setenv("BBHUNT_MCP_APPROVE", "true")
+    p = PolicyEngine(domains=["*.example.com"])
+    d = p.authorize_tool(
+        "bughunter_hunt",
+        {"target": "app.example.com", "scope_domains": ["*.example.com"]},
     )
     assert d.allowed
 

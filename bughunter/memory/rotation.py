@@ -8,9 +8,16 @@ N backups (file.1, file.2, ...) and dropping the oldest.
 Rotation is performed under fcntl.LOCK_EX to be safe with concurrent writers.
 """
 
-import fcntl
+try:
+    import fcntl
+    _WINDOWS_COMPAT = False
+except ImportError:  # Windows
+    from memory._fcntl_compat import fcntl
+    _WINDOWS_COMPAT = True
 import os
 from pathlib import Path
+
+from memory.file_lock import exclusive_path_lock
 
 DEFAULT_MAX_BYTES = 10 * 1024 * 1024  # 10 MB
 DEFAULT_KEEP = 3
@@ -67,6 +74,8 @@ def rotate_if_needed(
     path: Path,
     max_bytes: int = DEFAULT_MAX_BYTES,
     keep: int = DEFAULT_KEEP,
+    *,
+    already_locked: bool = False,
 ) -> bool:
     """Rotate ``path`` under an exclusive lock if it exceeds ``max_bytes``.
 
@@ -77,22 +86,24 @@ def rotate_if_needed(
     if not needs_rotation(path, max_bytes):
         return False
 
-    # Acquire a lock on the live file to serialize the rotation. Using
-    # O_RDONLY + O_CREAT keeps the lock independent of the writer's append fd.
-    # 0o600: these memory files may hold secret-bearing recon data.
-    fd = os.open(str(path), os.O_RDONLY | os.O_CREAT, 0o600)
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
-        # Re-check size under lock — another process may have rotated already.
+    if already_locked:
         if not needs_rotation(path, max_bytes):
             return False
         rotate(path, keep=keep)
         return True
-    finally:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_UN)
-        finally:
-            os.close(fd)
+
+    if _WINDOWS_COMPAT:
+        with exclusive_path_lock(path):
+            if not needs_rotation(path, max_bytes):
+                return False
+            rotate(path, keep=keep)
+            return True
+
+    with exclusive_path_lock(path):
+        if not needs_rotation(path, max_bytes):
+            return False
+        rotate(path, keep=keep)
+        return True
 
 
 def list_backups(path: Path, keep: int = DEFAULT_KEEP) -> list[Path]:

@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Bug Bounty Tool Installer
+# AgentNarna External Tool Installer
 # Installs all required tools via Homebrew and Go
 # Usage: ./install_tools.sh [--with-cicd-scanner] [--with-credential-attack]
 # =============================================================================
@@ -26,7 +26,7 @@ log_err()  { echo -e "${RED}[-]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 
 echo "============================================="
-echo "  Bug Bounty Tool Installer"
+echo "  AgentNarna External Tool Installer"
 echo "============================================="
 
 # Check for Homebrew

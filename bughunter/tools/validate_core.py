@@ -213,6 +213,11 @@ def verify_finding_programmatic(
             "program": finding.get("target"),
             "vulnerability_type": raw_class,
             "endpoint": finding.get("url") or finding.get("endpoint"),
+            "impact": finding.get("impact") or finding.get("confirmed_impact"),
+            "curl_poc": finding.get("curl_poc") or finding.get("poc"),
+            "cvss_score": finding.get("cvss_score"),
+            "cvss_vector": finding.get("cvss_vector"),
+            "evidence_links": finding.get("evidence_links") or [],
         },
     }
 
@@ -230,7 +235,8 @@ def verify_finding_programmatic(
                 status=status,
                 rejection_reasons=rejection_reasons,
                 finding_id=fid,
-                memory_dir=memory_dir or os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory"),
+                memory_dir=(memory_dir or os.environ.get("AGENTNARNA_MEMORY_DIR")
+                            or os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory")),
                 write=True,
             )
         except Exception:  # noqa: BLE001 - learning must never break validation

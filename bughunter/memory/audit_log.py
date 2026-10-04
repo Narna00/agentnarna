@@ -5,7 +5,10 @@ Append-only JSONL file at hunt-memory/audit.jsonl.
 Used for post-session review and scope compliance verification.
 """
 
-import fcntl
+try:
+    import fcntl
+except ImportError:  # Windows
+    from memory._fcntl_compat import fcntl
 import json
 import os
 import sys
@@ -13,6 +16,7 @@ import time
 from pathlib import Path
 
 from memory.rotation import DEFAULT_KEEP, DEFAULT_MAX_BYTES, rotate_if_needed
+from memory.file_lock import exclusive_path_lock
 from memory.schemas import validate_audit_entry, make_audit_entry, SchemaError
 
 
@@ -40,21 +44,19 @@ class AuditLog:
         line = json.dumps(validated, separators=(",", ":")) + "\n"
         encoded = line.encode("utf-8")
 
-        rotate_if_needed(self.path, max_bytes=self.max_bytes, keep=self.keep_backups)
-
-        # 0o600: the audit log records request URLs, which can carry tokens in
-        # the query string — keep it owner-only, not world-readable.
-        fd = os.open(str(self.path), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX)
+        with exclusive_path_lock(self.path):
+            rotate_if_needed(
+                self.path, max_bytes=self.max_bytes,
+                keep=self.keep_backups, already_locked=True,
+            )
+            # 0o600: request URLs may carry tokens in their query string.
+            fd = os.open(str(self.path), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
             try:
                 written = os.write(fd, encoded)
                 if written != len(encoded):
                     raise OSError(f"Partial write: {written}/{len(encoded)} bytes")
             finally:
-                fcntl.flock(fd, fcntl.LOCK_UN)
-        finally:
-            os.close(fd)
+                os.close(fd)
 
     def log_request(
         self,
@@ -68,12 +70,12 @@ class AuditLog:
     ) -> None:
         """Convenience method to create and log an audit entry.
 
-        If session_id is None, falls back to the BBHUNT_SESSION_ID env var
+        If session_id is None, falls back to the AgentNarna session env var
         (set by tools/auth_session.py + _auth_helper.sh) so authenticated
         requests get tagged with a stable, non-secret hash automatically.
         """
         if session_id is None:
-            env_sid = os.environ.get("BBHUNT_SESSION_ID")
+            env_sid = os.environ.get("AGENTNARNA_SESSION_ID") or os.environ.get("BBHUNT_SESSION_ID")
             if env_sid:
                 session_id = env_sid
         entry = make_audit_entry(

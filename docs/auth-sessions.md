@@ -16,8 +16,8 @@ python3 tools/hunt.py --target target.com \
     --bearer "eyJhbGciOiJIUzI1NiI..."
 
 # Option B: env vars (persists across commands in the shell)
-export BBHUNT_COOKIE="session=eyJabc..."
-export BBHUNT_BEARER="eyJhbGciOiJIUzI1NiI..."
+export AGENTNARNA_COOKIE="session=eyJabc..."
+export AGENTNARNA_BEARER="eyJhbGciOiJIUzI1NiI..."
 python3 tools/hunt.py --target target.com
 
 # Option C: file (recommended for multi-target hunts)
@@ -74,18 +74,18 @@ now flow through to httpx, katana, ffuf, nuclei, and dalfox.
 ## Env vars
 
 ```
-BBHUNT_COOKIE        # one cookie string
-BBHUNT_BEARER        # one bearer token
-BBHUNT_API_KEY       # one API key (sent as X-API-Key)
-BBHUNT_AUTH_HEADER   # newline-separated "Name: value" entries (repeatable)
+AGENTNARNA_COOKIE        # one cookie string
+AGENTNARNA_BEARER        # one bearer token
+AGENTNARNA_API_KEY       # one API key (sent as X-API-Key)
+AGENTNARNA_AUTH_HEADER   # newline-separated "Name: value" entries (repeatable)
 ```
 
 When `tools/hunt.py` runs, it merges all inputs into a single session and
 exports two derived vars to every subprocess:
 
 ```
-BBHUNT_AUTH_HEADERS  # the merged, deduped header list (newline-separated)
-BBHUNT_SESSION_ID    # sha256(headers)[:12] — short, stable hash
+AGENTNARNA_AUTH_HEADERS  # the merged, deduped header list (newline-separated)
+AGENTNARNA_SESSION_ID    # sha256(headers)[:12] — short, stable hash
 ```
 
 Bash scripts source `tools/_auth_helper.sh`, which turns these into an array
@@ -140,10 +140,13 @@ A bare JSON array of header strings also works:
 Or a `.env`-style file:
 
 ```
-BBHUNT_COOKIE=session=eyJabc
-BBHUNT_BEARER=eyJhbGciOi
+AGENTNARNA_COOKIE=session=eyJabc
+AGENTNARNA_BEARER=eyJhbGciOi
 X-API-Key=ak_live_xxx
 ```
+
+The corresponding `BBHUNT_*` names remain deprecated aliases so auth files and
+shell profiles from the upstream project continue to work.
 
 ## Multiple sessions (low-priv vs high-priv)
 

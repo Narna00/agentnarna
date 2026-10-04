@@ -1,4 +1,4 @@
-"""CLI helpers: bughunter mcp serve | doctor | tools."""
+"""CLI helpers: agentnarna mcp serve | doctor | tools."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def cmd_tools() -> int:
 
 
 def cmd_doctor() -> int:
-    print("Agentic-Bug-Hunter MCP doctor")
+    print("AgentNarna MCP doctor")
     print(f"repo: {_REPO}")
     if str(_REPO) not in sys.path:
         sys.path.insert(0, str(_REPO))
@@ -60,9 +60,13 @@ def cmd_doctor() -> int:
             ok = False
 
     # memory / config
-    mem = Path(os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory"))
-    print(f"[*] BBHUNT_MEMORY_DIR={mem} exists={mem.exists()}")
-    cfg = Path.home() / ".bughunter" / "config.json"
+    mem = Path(os.environ.get("AGENTNARNA_MEMORY_DIR") or os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory"))
+    print(f"[*] AGENTNARNA_MEMORY_DIR={mem} exists={mem.exists()}")
+    cfg = Path.home() / ".agentnarna" / "config.json"
+    if not cfg.exists():
+        legacy = Path.home() / ".bughunter" / "config.json"
+        if legacy.exists():
+            cfg = legacy
     print(f"[*] provider config {cfg} exists={cfg.exists()}")
 
     # sibling integrations
@@ -70,7 +74,8 @@ def cmd_doctor() -> int:
         p = _REPO / "mcp" / name
         print(f"[*] sibling {name}: {'ok' if p.exists() else 'missing'}")
 
-    print("[+] approve env BBHUNT_MCP_APPROVE=" + os.environ.get("BBHUNT_MCP_APPROVE", "(unset)"))
+    approve = os.environ.get("AGENTNARNA_MCP_APPROVE") or os.environ.get("BBHUNT_MCP_APPROVE", "(unset)")
+    print("[+] approve env AGENTNARNA_MCP_APPROVE=" + approve)
     print("OK" if ok else "ISSUES FOUND")
     return 0 if ok else 1
 
@@ -85,7 +90,7 @@ def cmd_serve() -> int:
 def main(argv: list[str] | None = None) -> int:
     argv = list(argv if argv is not None else sys.argv[1:])
     if not argv or argv[0] in {"-h", "--help", "help"}:
-        print("Usage: bughunter mcp [serve|doctor|tools]")
+        print("Usage: agentnarna mcp [serve|doctor|tools]")
         return 0
     cmd = argv[0]
     if cmd == "serve":

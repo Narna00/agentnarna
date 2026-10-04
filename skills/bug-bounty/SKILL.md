@@ -7,6 +7,21 @@ description: Complete bug bounty workflow — recon, pre-hunt learning, vulnerab
 
 Full pipeline: Recon -> Learn -> Hunt -> Validate -> Report. One skill for everything.
 
+## OPERATING CONTRACT
+
+- Scanner output, reflection, status changes, stack traces, WAF pages, and model
+  analysis are **candidates**, never findings.
+- When a concrete candidate is blocked by a control, route to
+  `skills/adaptive-exploit-validation`; change strategy from measured feedback
+  and use harmless canaries rather than repeating payload spellings.
+- For current public techniques, route to `skills/research-intelligence`.
+  External posts create hypotheses only; they never create proof.
+- A report may consume only the validation record and evidence links belonging
+  to that exact finding. One verified issue cannot promote neighboring scanner
+  artifacts.
+- Default persistence is minimal: keep compact state, verified proof, and final
+  reports. Save rejected drafts and full reasoning only in explicit audit mode.
+
 ## THE ONLY QUESTION THAT MATTERS
 
 > **"Can an attacker do this RIGHT NOW against a real user who has taken NO unusual actions -- and does it cause real harm (stolen money, leaked PII, account takeover, code execution)?"**
@@ -38,10 +53,10 @@ Full pipeline: Recon -> Learn -> Hunt -> Validate -> Report. One skill for every
 4. **Validate before writing** -- check CHANGELOG, design docs, deployment scripts FIRST
 5. **One bug class at a time** -- go deep, don't spray
 6. **Verify data isn't already public** -- check web UI in incognito before reporting API "leaks"
-7. **5-MINUTE RULE** -- if a target shows nothing after 5 min probing (all 401/403/404), MOVE ON
+7. **5-MINUTE ADAPTATION RULE** -- if the same control fingerprint persists for 5 minutes, stop mutating payload spelling; choose a distinct strategy family and move on only when safe families are exhausted
 8. **IMPACT-FIRST HUNTING** -- ask "what's the worst thing if auth was broken?" If nothing valuable, skip target
 9. **CREDENTIAL LEAKS need exploitation proof** -- finding keys isn't enough, must PROVE what they access
-10. **STOP SHALLOW RECON SPIRALS** -- don't probe 403s, don't grep for analytics keys, don't check staging domains that lead nowhere
+10. **STOP SHALLOW MUTATION SPIRALS** -- treat 403/WAF/sanitizer responses as control fingerprints, pivot method/route/identity/workflow hypotheses, and never confuse a bypass-shaped status change with impact
 11. **BUSINESS IMPACT over vuln class** -- severity depends on CONTEXT, not just vuln type
 12. **UNDERSTAND THE TARGET DEEPLY** -- before hunting, learn the app like a real user
 13. **DON'T OVER-RELY ON AUTOMATION** -- automated scans hit WAFs, trigger rate limits, find the same bugs everyone else finds
@@ -72,7 +87,7 @@ python3 tools/hunt.py --target T --bearer 'eyJhbGciOi...'
 python3 tools/hunt.py --target T --auth-file .private/T.json
 
 # Or via env (persists for the shell):
-export BBHUNT_COOKIE='session=eyJabc...'
+export AGENTNARNA_COOKIE='session=eyJabc...'
 python3 tools/hunt.py --target T
 ```
 
@@ -1631,17 +1646,10 @@ When payout is being downgraded, use these counters:
 
 # INSTALLATION (Claude Code Skill)
 
-To use this as a Claude Code skill, copy this file to your skills directory:
+From an AgentNarna checkout, install the repository skills and commands:
 
 ```bash
-# Option A: Clone the repo and link the skill
-git clone https://github.com/Awarexone/Agentic-Bug-Hunter.git ~/.claude/skills/bug-bounty
-ln -s ~/.claude/skills/bug-bounty/SKILL.md ~/.claude/skills/bug-bounty/SKILL.md
-
-# Option B: Direct copy
-mkdir -p ~/.claude/skills/bug-bounty
-curl -s https://raw.githubusercontent.com/Awarexone/Agentic-Bug-Hunter/main/SKILL.md \
-  -o ~/.claude/skills/bug-bounty/SKILL.md
+./install.sh --agent claude
 ```
 
 Then in Claude Code, this skill loads automatically when you ask about bug bounty, recon, or vulnerability hunting.

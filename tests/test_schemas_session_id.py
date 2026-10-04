@@ -4,7 +4,8 @@ Lives in its own file so the existing test_schemas.py fixtures don't have
 to change. Covers:
   - session_id is an optional string on journal + pattern entries
   - validation rejects empty / non-string session_id
-  - make_journal_entry / make_pattern_entry auto-pick from BBHUNT_SESSION_ID
+  - make_journal_entry / make_pattern_entry auto-pick from AGENTNARNA_SESSION_ID
+    while retaining BBHUNT_SESSION_ID as a legacy alias
   - explicit session_id argument wins over the env var
 """
 
@@ -102,7 +103,7 @@ class TestEnvAutoPickup:
     SID = "deadbeef1234"
 
     def test_journal_entry_picks_up_env_session_id(self, monkeypatch):
-        monkeypatch.setenv("BBHUNT_SESSION_ID", self.SID)
+        monkeypatch.setenv("AGENTNARNA_SESSION_ID", self.SID)
         e = make_journal_entry(
             target="target.com",
             action="hunt",
@@ -113,7 +114,7 @@ class TestEnvAutoPickup:
         assert e.get("session_id") == self.SID
 
     def test_explicit_arg_overrides_env(self, monkeypatch):
-        monkeypatch.setenv("BBHUNT_SESSION_ID", self.SID)
+        monkeypatch.setenv("AGENTNARNA_SESSION_ID", self.SID)
         e = make_journal_entry(
             target="target.com",
             action="hunt",
@@ -125,6 +126,7 @@ class TestEnvAutoPickup:
         assert e.get("session_id") == "explicit-id"
 
     def test_no_env_no_arg_no_field(self, monkeypatch):
+        monkeypatch.delenv("AGENTNARNA_SESSION_ID", raising=False)
         monkeypatch.delenv("BBHUNT_SESSION_ID", raising=False)
         e = make_journal_entry(
             target="target.com",
@@ -136,7 +138,7 @@ class TestEnvAutoPickup:
         assert "session_id" not in e
 
     def test_pattern_entry_picks_up_env_session_id(self, monkeypatch):
-        monkeypatch.setenv("BBHUNT_SESSION_ID", self.SID)
+        monkeypatch.setenv("AGENTNARNA_SESSION_ID", self.SID)
         e = make_pattern_entry(
             target="target.com",
             vuln_class="idor",
@@ -146,7 +148,7 @@ class TestEnvAutoPickup:
         assert e.get("session_id") == self.SID
 
     def test_session_summary_picks_up_env_session_id(self, monkeypatch):
-        monkeypatch.setenv("BBHUNT_SESSION_ID", self.SID)
+        monkeypatch.setenv("AGENTNARNA_SESSION_ID", self.SID)
         e = make_session_summary_entry(
             target="target.com",
             action="hunt",
@@ -159,7 +161,8 @@ class TestEnvAutoPickup:
         assert e.get("session_id") == self.SID
 
     def test_empty_env_var_treated_as_unset(self, monkeypatch):
-        monkeypatch.setenv("BBHUNT_SESSION_ID", "")
+        monkeypatch.setenv("AGENTNARNA_SESSION_ID", "")
+        monkeypatch.delenv("BBHUNT_SESSION_ID", raising=False)
         e = make_journal_entry(
             target="target.com",
             action="hunt",
@@ -168,3 +171,26 @@ class TestEnvAutoPickup:
             result="confirmed",
         )
         assert "session_id" not in e
+
+    def test_legacy_session_id_alias_still_works(self, monkeypatch):
+        monkeypatch.delenv("AGENTNARNA_SESSION_ID", raising=False)
+        monkeypatch.setenv("BBHUNT_SESSION_ID", self.SID)
+        e = make_journal_entry(
+            target="target.com",
+            action="hunt",
+            vuln_class="idor",
+            endpoint="/api/users/1",
+            result="confirmed",
+        )
+        assert e.get("session_id") == self.SID
+
+    def test_primary_session_id_wins_over_legacy(self, monkeypatch):
+        monkeypatch.setenv("AGENTNARNA_SESSION_ID", self.SID)
+        monkeypatch.setenv("BBHUNT_SESSION_ID", "legacy000000")
+        e = make_pattern_entry(
+            target="target.com",
+            vuln_class="idor",
+            technique="numeric_id_swap",
+            tech_stack=["express"],
+        )
+        assert e.get("session_id") == self.SID

@@ -1,4 +1,4 @@
-name: tests
+name: AgentNarna CI
 
 on:
   push:
@@ -34,7 +34,42 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install -e '.[test]'
 
       - name: Run test suite
-        run: pytest -q
+        run: python -m pytest -q
+
+  linux-install-smoke:
+    name: Linux clone/install smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate shell scripts
+        run: bash -n install.sh uninstall.sh install_tools.sh uninstall_tools.sh
+
+      - name: Install cloned checkout and run CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          bin_dir="$(mktemp -d)"
+          AGENTNARNA_BIN_DIR="$bin_dir" AGENTNARNA_SKIP_DEPS=1 \
+            ./install.sh --agent standalone
+          test -L "$bin_dir/agentnarna"
+          test -L "$bin_dir/bughunter"
+          "$bin_dir/agentnarna" --help
+          "$bin_dir/agentnarna" research --help
+          AGENTNARNA_BIN_DIR="$bin_dir" \
+            ./uninstall.sh --agent standalone --yes
+          test ! -e "$bin_dir/agentnarna"
+          test ! -e "$bin_dir/bughunter"
+
+      - name: Build Python package
+        run: |
+          python -m pip install --upgrade build
+          python -m build

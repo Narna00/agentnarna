@@ -1,4 +1,4 @@
-# A → Z Tutorial — Finding Real Bugs with the bughunter.fun Toolkit
+# A → Z Tutorial — Finding Real Bugs with AgentNarna
 
 This is the short, record-it-once walkthrough that takes you from
 zero to a submission-ready report.
@@ -32,8 +32,8 @@ scanner available and skips the rest gracefully.
 ## A. Install (30 sec)
 
 ```bash
-git clone https://github.com/Awarexone/Agentic-Bug-Hunter.git
-cd Agentic-Bug-Hunter
+git clone https://github.com/YOUR_USERNAME/agentnarna.git
+cd agentnarna
 chmod +x install.sh && ./install.sh
 ```
 
@@ -47,7 +47,7 @@ open Claude Code.
 bash tools/external_arsenal.sh
 ```
 
-You'll see the **BUGHUNTER** banner, then a table of ~50 external tools with
+You'll see the **AGENTNARNA** banner, then a table of external tools with
 their install status. Green rows are ready; red rows just print an install
 hint. **Nothing red blocks the rest of the tutorial** — the demo works on
 stdlib alone.

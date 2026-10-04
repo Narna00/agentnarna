@@ -40,7 +40,7 @@ import urllib.request
 import uuid
 from dataclasses import dataclass
 
-USER_AGENT = "agentic-bug-hunter/llm_redteam"
+USER_AGENT = "agentnarna/0.1 llm-redteam"
 
 
 @dataclass

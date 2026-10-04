@@ -1,4 +1,4 @@
-"""Adapters over existing BugHunter tools (no second engine)."""
+"""Adapters over existing AgentNarna tools (no second engine)."""
 
 from __future__ import annotations
 
@@ -343,7 +343,7 @@ def generate_report_stub(target: str, finding_id: str | None = None) -> dict[str
         return {
             "status": "completed",
             "error": "INSUFFICIENT_EVIDENCE",
-            "summary": "No report artifacts — run /validate then /report (or bughunter report)",
+            "summary": "No report artifacts — run /validate then /report (or agentnarna report)",
             "finding_id": finding_id,
             "next_action": "bughunter_validate",
         }
@@ -358,7 +358,7 @@ def generate_report_stub(target: str, finding_id: str | None = None) -> dict[str
 
 def memory_patterns(target: str | None = None, tech: list[str] | None = None) -> dict[str, Any]:
     _sys_path()
-    mem = Path(os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory"))
+    mem = Path(os.environ.get("AGENTNARNA_MEMORY_DIR") or os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory"))
     path = mem / "patterns.jsonl"
     if not path.exists():
         return {"status": "completed", "patterns": [], "summary": "No patterns.jsonl yet"}
@@ -382,7 +382,7 @@ def memory_patterns(target: str | None = None, tech: list[str] | None = None) ->
 
 def memory_search(query: str, target: str | None = None, limit: int = 30) -> dict[str, Any]:
     _sys_path()
-    mem = Path(os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory"))
+    mem = Path(os.environ.get("AGENTNARNA_MEMORY_DIR") or os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory"))
     journal = mem / "journal.jsonl"
     hits = []
     q = query.lower()

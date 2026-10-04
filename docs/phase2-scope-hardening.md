@@ -4,7 +4,7 @@ Goal: make scope enforcement genuinely trustworthy for the desktop MVP.
 
 ## MVP guarantee (precise)
 
-**Out-of-scope traffic executed by the Agentic Bug Hunter Desktop MVP = 0.**
+**Out-of-scope traffic executed by the AgentNarna Desktop MVP = 0.**
 
 This guarantee applies to the exact execution path the desktop MVP uses:
 

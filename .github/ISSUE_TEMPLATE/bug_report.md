@@ -3,7 +3,7 @@ name: Bug Report
 about: Something in the toolkit isn't working correctly
 title: "[BUG] "
 labels: bug
-assignees: shuvonsec
+assignees: ''
 ---
 
 ## What happened?

@@ -1,14 +1,14 @@
 #!/bin/bash
-# Claude Bug Bounty — install skills, commands, and agents for multiple harnesses.
+# AgentNarna — install the Linux CLI, skills, commands, and agents.
 
 set -euo pipefail
 
-AGENT="${BBHUNT_AGENT:-claude}"
+AGENT="${AGENTNARNA_AGENT:-${BBHUNT_AGENT:-claude}}"
 SCOPE="global"
 SETUP_BURP="ask"
 
 # Every source path below is repo-relative, so anchor to the script's own
-# directory. Without this, running `~/tools/Agentic-Bug-Hunter/install.sh`
+# directory. Without this, running `~/tools/agentnarna/install.sh`
 # from an unrelated cwd silently copies nothing.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -41,13 +41,13 @@ Defaults:
   ./install.sh                    Install for Claude Code globally
 
 Standalone (no subscription needed):
-  ./install.sh --agent standalone Install or update the 'bughunter' system command
+  ./install.sh --agent standalone Install or update the 'agentnarna' command
   ./install.sh --agent mcp        Print MCP client config + install mcp Python SDK hint
                                   After install, type from anywhere:
-                                    bughunter help
-                                    bughunter setup
-                                    bughunter recon target.com
-                                    bughunter h target.com
+                                    agentnarna help
+                                    agentnarna setup
+                                    agentnarna recon target.com
+                                    agentnarna h target.com
 
 Examples:
   ./install.sh --agent opencode   Install OpenCode skills + commands globally
@@ -153,7 +153,7 @@ install_claude() {
         root="$HOME/.claude"
     fi
 
-    echo "Installing Claude Bug Bounty for Claude Code ($SCOPE)..."
+    echo "Installing AgentNarna for Claude Code ($SCOPE)..."
     copy_tree_items "skills/*" "$root/skills" "skill"
     copy_files "commands/*.md" "$root/commands" "command"
     copy_files "$AGENTS_SRC/*.md" "$root/agents" "agent"
@@ -205,7 +205,7 @@ install_opencode() {
         root="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
     fi
 
-    echo "Installing Claude Bug Bounty for OpenCode ($SCOPE)..."
+    echo "Installing AgentNarna for OpenCode ($SCOPE)..."
     copy_tree_items "skills/*" "$root/skills" "skill"
     copy_files "commands/*.md" "$root/commands" "command"
     copy_files "$AGENTS_SRC/*.md" "$root/agents" "agent"
@@ -227,7 +227,7 @@ install_pi() {
         root="$HOME/.pi/agent"
     fi
 
-    echo "Installing Claude Bug Bounty for Pi Agent ($SCOPE)..."
+    echo "Installing AgentNarna for Pi Agent ($SCOPE)..."
     copy_tree_items "skills/*" "$root/skills" "skill"
     copy_files "commands/*.md" "$root/prompts" "prompt"
     echo "Done: $root"
@@ -248,7 +248,7 @@ install_codex() {
         root="${CODEX_HOME:-$HOME/.codex}"
     fi
 
-    echo "Installing Claude Bug Bounty for Codex-style Agent Skills ($SCOPE)..."
+    echo "Installing AgentNarna for Codex-style Agent Skills ($SCOPE)..."
     copy_tree_items "skills/*" "$root/skills" "skill"
     copy_files "commands/*.md" "$root/commands" "command"
     echo "Done: $root"
@@ -271,11 +271,11 @@ install_agents() {
 install_standalone() {
     echo ""
     echo "════════════════════════════════════════════════════"
-    echo "  BugHunter Standalone Engine (no subscription)"
+    echo "  AgentNarna Standalone Engine"
     echo "════════════════════════════════════════════════════"
     echo ""
 
-    local repo_dir engine existing_cmd bin_dir target action
+    local repo_dir engine existing_cmd bin_dir target action command_name
     local -a install_cmd
     repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     engine="$repo_dir/bughunter/engine.py"
@@ -283,16 +283,19 @@ install_standalone() {
     # Make engine.py executable
     chmod +x "$engine"
 
-    # ── Install bughunter system command ──────────────────────────────────────
+    # ── Install agentnarna system command ─────────────────────────────────────
     # Prefer updating the currently active managed installation. This prevents
     # an old /usr/local/bin entry from shadowing a new ~/.local/bin symlink.
-    existing_cmd="$(command -v bughunter 2>/dev/null || true)"
-    if [ -n "${BBHUNTER_BIN_DIR:-}" ]; then
+    existing_cmd="$(command -v agentnarna 2>/dev/null || true)"
+    [ -n "$existing_cmd" ] || existing_cmd="$(command -v bughunter 2>/dev/null || true)"
+    if [ -n "${AGENTNARNA_BIN_DIR:-}" ]; then
+        bin_dir="$AGENTNARNA_BIN_DIR"
+    elif [ -n "${BBHUNTER_BIN_DIR:-}" ]; then
         bin_dir="$BBHUNTER_BIN_DIR"
     elif [ -n "$existing_cmd" ] && [[ -e "$existing_cmd" || -L "$existing_cmd" ]]; then
         if [ -L "$existing_cmd" ] && [ "$(basename "$(readlink "$existing_cmd")")" = "engine.py" ]; then
             bin_dir="$(dirname "$existing_cmd")"
-        elif [ -f "$existing_cmd" ] && grep -q "Standalone BugHunter CLI" "$existing_cmd" 2>/dev/null; then
+        elif [ -f "$existing_cmd" ] && grep -Eq "Standalone (AgentNarna|BugHunter) CLI" "$existing_cmd" 2>/dev/null; then
             bin_dir="$(dirname "$existing_cmd")"
         elif [ -w /usr/local/bin ]; then
             bin_dir="/usr/local/bin"
@@ -303,12 +306,6 @@ install_standalone() {
         bin_dir="/usr/local/bin"
     else
         bin_dir="$HOME/.local/bin"
-    fi
-
-    target="$bin_dir/bughunter"
-    action="Installed"
-    if [ -e "$target" ] || [ -L "$target" ]; then
-        action="Updated"
     fi
 
     install_cmd=()
@@ -323,17 +320,28 @@ install_standalone() {
     # bash 3.2 (macOS default) aborts under set -u when expanding an empty array
     # as "${install_cmd[@]}" — same idiom as tools/_auth_helper.sh.
     ${install_cmd[@]+"${install_cmd[@]}"} mkdir -p "$bin_dir"
-    ${install_cmd[@]+"${install_cmd[@]}"} ln -sfn "$engine" "$target"
+    for command_name in agentnarna bughunter; do
+        target="$bin_dir/$command_name"
+        action="Installed"
+        if [ -e "$target" ] || [ -L "$target" ]; then
+            action="Updated"
+        fi
+        ${install_cmd[@]+"${install_cmd[@]}"} ln -sfn "$engine" "$target"
 
-    if [ -L "$target" ] && [ "$(readlink "$target")" = "$engine" ]; then
-        echo "[+] $action: $target -> $engine"
-    else
-        echo "[!] Could not install or update $target" >&2
-        echo "    Try: sudo ./install.sh --agent standalone" >&2
-        echo "    Or add this to ~/.bashrc / ~/.zshrc:"
-        echo "    alias bughunter='python3 $engine'"
-        return 1
-    fi
+        if [ -L "$target" ] && [ "$(readlink "$target")" = "$engine" ]; then
+            if [ "$command_name" = "bughunter" ]; then
+                echo "[+] $action compatibility alias: $target -> $engine"
+            else
+                echo "[+] $action: $target -> $engine"
+            fi
+        else
+            echo "[!] Could not install or update $target" >&2
+            echo "    Try: sudo ./install.sh --agent standalone" >&2
+            echo "    Or add this to ~/.bashrc / ~/.zshrc:"
+            echo "    alias agentnarna='python3 $engine'"
+            return 1
+        fi
+    done
 
     # ── Check PATH ────────────────────────────────────────────────────────────
     if ! echo "$PATH" | tr ':' '\n' | grep -Fxq "$bin_dir"; then
@@ -359,7 +367,7 @@ install_standalone() {
     # ── Optional Python deps ──────────────────────────────────────────────────
     # Ollama setup/chat has a standard-library HTTP fallback, so a distro that
     # blocks global pip installs still gets a working local provider.
-    if [ "${BBHUNTER_SKIP_DEPS:-0}" != "1" ] && command -v pip3 &>/dev/null; then
+    if [ "${AGENTNARNA_SKIP_DEPS:-${BBHUNTER_SKIP_DEPS:-0}}" != "1" ] && command -v pip3 &>/dev/null; then
         echo "Installing optional Python deps (cloud providers and agent mode)..."
         if ! pip3 install --quiet requests ollama 2>/dev/null; then
             echo "[!] Optional pip packages were not installed; standalone Ollama chat still works via HTTP."
@@ -370,28 +378,28 @@ install_standalone() {
     echo "════════════════════════════════════════════════════"
     echo "  Done! Type from anywhere:"
     echo ""
-    echo "    bughunter setup"
-    echo "    bughunter models"
-    echo "    bughunter recon target.com"
-    echo "    bughunter hunt  target.com"
-    echo "    bughunter validate \"<finding>\""
-    echo "    bughunter chat"
+    echo "    agentnarna setup"
+    echo "    agentnarna models"
+    echo "    agentnarna recon target.com"
+    echo "    agentnarna hunt  target.com"
+    echo "    agentnarna validate \"<finding>\""
+    echo "    agentnarna chat"
     echo "════════════════════════════════════════════════════"
     echo ""
 }
 
 install_mcp() {
     echo "════════════════════════════════════════════════════"
-    echo "  Agentic-Bug-Hunter MCP"
+    echo "  AgentNarna MCP"
     echo "════════════════════════════════════════════════════"
     echo ""
     echo "Server entry:"
     echo "  python3 $MCP_SRC/bughunter-mcp/server.py"
-    echo "  # or: bughunter mcp serve   (after standalone install)"
+    echo "  # or: agentnarna mcp serve   (after standalone install)"
     echo ""
     echo "Doctor / tool catalog:"
-    echo "  bughunter mcp doctor"
-    echo "  bughunter mcp tools"
+    echo "  agentnarna mcp doctor"
+    echo "  agentnarna mcp tools"
     echo ""
     echo "Python SDK:"
     echo "  pip install 'mcp>=2.2.0'"
@@ -399,10 +407,10 @@ install_mcp() {
     echo "Claude Code — merge $MCP_SRC/bughunter-mcp/claude-config.json into ~/.claude/settings.json mcpServers"
     echo "OpenCode   — merge $MCP_SRC/bughunter-mcp/opencode-config.json into opencode mcp config"
     echo ""
-    echo "Active tools require scope_domains + approve=true (or BBHUNT_MCP_APPROVE=1)."
+    echo "Active tools require scope_domains + approve=true (or AGENTNARNA_MCP_APPROVE=1)."
     echo "Existing Burp / Caido / HackerOne integrations are unchanged."
     echo ""
-    if [ "${BBHUNT_SKIP_DEPS:-0}" != "1" ] && command -v pip3 &>/dev/null; then
+    if [ "${AGENTNARNA_SKIP_DEPS:-${BBHUNT_SKIP_DEPS:-0}}" != "1" ] && command -v pip3 &>/dev/null; then
         echo "Installing mcp SDK (optional)..."
         pip3 install --quiet 'mcp>=2.2.0' 2>/dev/null || echo "[!] pip install mcp failed — install manually"
     fi

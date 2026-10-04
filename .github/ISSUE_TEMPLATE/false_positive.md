@@ -3,15 +3,15 @@ name: False Positive Report
 about: The scanner flagged something that came back N/A or is not a real vulnerability
 title: "[FP] "
 labels: false-positive
-assignees: shuvonsec
+assignees: ''
 ---
 
 ## What was flagged?
 
-<!-- Scanner output line — paste the [CONFIRMED] / [POSSIBLE] finding -->
+<!-- Paste the scanner lead/candidate and the validation result. -->
 
 ```
-[POSSIBLE] XSS found at ...
+candidate: XSS reflection at ...
 ```
 
 ## Why is it a false positive?

@@ -4,39 +4,32 @@
 
 | Version | Supported |
 |:---|:---|
-| v5.x (latest) | Yes |
-| v4.x | Critical fixes only |
-| < v4.0 | No |
+| Latest `0.x` release | Yes |
 
 ## Reporting a Vulnerability
 
-If you find a security issue in this toolkit itself (not a bug bounty finding on a third-party target), please **do not open a public GitHub issue**.
+For a vulnerability in AgentNarna itself, do not open a public issue. Use
+GitHub's **Report a vulnerability** flow on the repository Security tab to open
+a private security advisory. If private reporting has not been enabled, contact
+the repository owner privately without publishing exploit details.
 
-**Email:** [shuvon@awarexone.com](mailto:shuvon@awarexone.com)  
-**CC / general:** [hello@awarexone.com](mailto:hello@awarexone.com)  
-**Subject line:** `[SECURITY] Brief description`
-
-Include:
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact
-- Your suggested fix (optional)
-
-You will receive a response within **72 hours**. Critical issues are patched and released within 7 days.
+Include the affected version, reproduction steps, impact, and a suggested fix
+when available.
 
 ## Scope
 
-This policy covers vulnerabilities in:
-- `tools/` — Python and shell scanner scripts
-- `memory/` — hunt memory system
-- `install.sh` / `install_tools.sh` — installer scripts
-- `demo/` — local demo server
+This policy covers:
 
-**Out of scope:** Third-party programs you test using this toolkit. Those belong in their respective bug bounty programs.
+- `bughunter/tools/` — Python and shell research tools
+- `bughunter/memory/` — hunt memory and evidence handling
+- `install.sh` and `install_tools.sh` — installer scripts
+- `demo/` — local demonstration services
+
+Third-party programs tested with AgentNarna are out of scope for this policy;
+report those only through their authorized disclosure or bug-bounty channel.
 
 ## Responsible Disclosure
 
-We follow coordinated disclosure. We will:
-- Acknowledge your report within 72 hours
-- Keep you updated on the fix timeline
-- Credit you in the release notes (unless you prefer anonymity)
+The project follows coordinated disclosure and keeps reporters informed while a
+fix is developed. Credit is provided in release notes unless anonymity is
+requested.

@@ -51,7 +51,7 @@ The `description` field of a tool is fed to the model verbatim. A malicious or c
 
 **Hunt:**
 ```
-[ ] Dump every tool description (bughunter mcp tools, or list_tools)
+[ ] Dump every tool description (`agentnarna mcp tools`, or `list_tools`)
 [ ] Grep descriptions for imperative verbs aimed at the model:
     "ignore", "also", "first read", "before responding", "do not tell",
     "<important>", invisible/zero-width chars, base64 blobs
@@ -91,7 +91,10 @@ Read-only tools can run freely. Anything that changes state or spends money/quot
 [ ] Is anything auto-submitted / auto-sent without a human in the loop?
 ```
 
-Good sign (this repo's own server): active tools require `approve=true` or `BBHUNT_MCP_APPROVE=1`, scope must be set first, reports are never auto-submitted, target content is treated as untrusted data. Use that as the reference bar.
+Good sign (this repo's own server): active tools require `approve=true` or
+`AGENTNARNA_MCP_APPROVE=1`, scope must be set first, reports are never
+auto-submitted, and target content is treated as untrusted data. Use that as the
+reference bar. `BBHUNT_MCP_APPROVE` is supported only as a migration alias.
 
 ---
 
@@ -137,7 +140,7 @@ Redact secrets server-side before return (this repo ships a `redact.py` — chec
 # Python
 grep -rnE "os\.system|subprocess.*shell=True|eval\(|exec\(|open\(.*\.\." .
 grep -rnE "@(mcp|server)\.tool|def .*\(.*\) ->" .    # enumerate tool defs
-grep -rniE "approve|scope|allowlist|BBHUNT_MCP_APPROVE" .  # gate coverage
+grep -rniE "approve|scope|allowlist|AGENTNARNA_MCP_APPROVE|BBHUNT_MCP_APPROVE" .  # gate coverage
 # Node / TS
 grep -rnE "child_process|exec\(|execSync|new Function|fs\.readFile.*\.\." .
 grep -rnE "server\.tool\(|registerTool|inputSchema" .

@@ -7,6 +7,12 @@ description: Finding validation before writing any report — 7-Question Gate (a
 
 One wrong answer = STOP. Kill it. Move on.
 
+**State model:** `lead -> candidate -> verified finding -> reportable`. Only a
+fresh deterministic oracle may perform the `candidate -> verified finding`
+transition. Each report section must be bound to that finding's own
+`validation.json` and linked proof; a pass elsewhere in the same directory is
+irrelevant.
+
 > "N/A hurts your validity ratio. Informative is neutral. Only submit what passes all 7 questions."
 
 ---
@@ -100,7 +106,7 @@ Check the NEVER SUBMIT list below. If it's on this list without a chain → **KI
 For any finding made under an authenticated hunt, record the answer to each:
 
 ```
-1. Session ID:        [12-char BBHUNT_SESSION_ID hash from audit.jsonl]
+1. Session ID:        [12-char AGENTNARNA_SESSION_ID hash from audit.jsonl]
 2. Identity:          [low-priv user A / high-priv user B / API key / etc.]
 3. Anonymous repro:   Does the same request work with NO auth header?
 4. Cross-identity:    Does it work under session B with the same data scope?

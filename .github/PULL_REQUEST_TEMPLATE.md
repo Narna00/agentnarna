@@ -15,9 +15,10 @@
 
 ## Test Plan
 
-- [ ] `pytest tests/` passes locally
+- [ ] `python3 -m pytest -q` passes locally
 - [ ] No hardcoded targets, API keys, or real domain names
-- [ ] Scanner additions use `[CONFIRMED]` / `[POSSIBLE]` / `[INFORMATIONAL]` confidence states
+- [ ] Scanner output remains a lead until a deterministic verifier confirms impact
+- [ ] Report evidence is bound to the exact validation record
 - [ ] New functionality has at least one regression test
 
 ## Related Issue

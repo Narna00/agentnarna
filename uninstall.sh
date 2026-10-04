@@ -1,9 +1,9 @@
 #!/bin/bash
-# BugHunter — remove installed skills, commands, agents, and standalone launcher.
+# AgentNarna — remove installed skills, commands, agents, and CLI launchers.
 
 set -euo pipefail
 
-AGENT="${BBHUNT_AGENT:-claude}"
+AGENT="${AGENTNARNA_AGENT:-${BBHUNT_AGENT:-claude}}"
 SCOPE="global"
 ASSUME_YES="no"
 PURGE_CONFIG="no"
@@ -22,11 +22,11 @@ Examples:
 Options:
   --global          Remove global installation (default)
   --project         Remove project-local installation
-  --purge-config    Also remove ~/.bughunter/config.json
+  --purge-config    Also remove ~/.agentnarna/config.json and legacy config
   -y, --yes         Skip confirmation
   -h, --help        Show this help
 
-The BugHunter configuration is preserved unless --purge-config is supplied.
+The AgentNarna configuration is preserved unless --purge-config is supplied.
 EOF
 }
 
@@ -68,12 +68,12 @@ case "$AGENT" in
 esac
 
 if [ "$SCOPE" = "project" ] && [[ "$AGENT" == "standalone" || "$AGENT" == "engine" ]]; then
-    echo "Standalone BugHunter is a global command; --project is not applicable." >&2
+    echo "Standalone AgentNarna is a global command; --project is not applicable." >&2
     exit 2
 fi
 
 if [ "$ASSUME_YES" != "yes" ]; then
-    echo "This will uninstall BugHunter components for: $AGENT ($SCOPE)."
+    echo "This will uninstall AgentNarna components for: $AGENT ($SCOPE)."
     if [ "$PURGE_CONFIG" = "yes" ]; then
         echo "The saved provider/model configuration will also be removed."
     else
@@ -164,12 +164,12 @@ uninstall_agents() {
     remove_tree_items "$SCRIPT_DIR/skills/*" "$root/skills" "shared skill"
 }
 
-is_managed_bughunter() {
+is_managed_agentnarna() {
     local path="$1"
     if [ -L "$path" ]; then
         [ "$(basename "$(readlink "$path")")" = "engine.py" ]
     elif [ -f "$path" ]; then
-        grep -q "Standalone BugHunter CLI" "$path" 2>/dev/null
+        grep -Eq "Standalone (AgentNarna|BugHunter) CLI" "$path" 2>/dev/null
     else
         return 1
     fi
@@ -180,7 +180,7 @@ remove_standalone_path() {
     local -a remove_cmd=()
     [ -e "$target" ] || [ -L "$target" ] || return 0
 
-    if ! is_managed_bughunter "$target"; then
+    if ! is_managed_agentnarna "$target"; then
         echo "! Preserved unrelated command: $target"
         return 0
     fi
@@ -204,14 +204,21 @@ remove_standalone_path() {
 uninstall_standalone() {
     local active candidate
     local -a candidates=()
-    if [ -n "${BBHUNTER_BIN_DIR:-}" ]; then
+    if [ -n "${AGENTNARNA_BIN_DIR:-}" ]; then
+        candidates+=("$AGENTNARNA_BIN_DIR/agentnarna" "$AGENTNARNA_BIN_DIR/bughunter")
+    elif [ -n "${BBHUNTER_BIN_DIR:-}" ]; then
         # Explicit override is intentionally exclusive, which also makes
         # packaging/integration tests unable to touch a real installation.
-        candidates+=("$BBHUNTER_BIN_DIR/bughunter")
+        candidates+=("$BBHUNTER_BIN_DIR/agentnarna" "$BBHUNTER_BIN_DIR/bughunter")
     else
+        active="$(command -v agentnarna 2>/dev/null || true)"
+        [ -n "$active" ] && candidates+=("$active")
         active="$(command -v bughunter 2>/dev/null || true)"
         [ -n "$active" ] && candidates+=("$active")
-        candidates+=("/usr/local/bin/bughunter" "$HOME/.local/bin/bughunter")
+        candidates+=(
+            "/usr/local/bin/agentnarna" "$HOME/.local/bin/agentnarna"
+            "/usr/local/bin/bughunter" "$HOME/.local/bin/bughunter"
+        )
     fi
 
     for candidate in "${candidates[@]}"; do
@@ -243,16 +250,20 @@ case "$AGENT" in
 esac
 
 if [ "$PURGE_CONFIG" = "yes" ]; then
-    remove_path "$HOME/.bughunter/config.json" "BugHunter configuration"
+    remove_path "$HOME/.agentnarna/config.json" "AgentNarna configuration"
+    if [ -d "$HOME/.agentnarna" ] && [ -z "$(find "$HOME/.agentnarna" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+        rmdir "$HOME/.agentnarna"
+    fi
+    remove_path "$HOME/.bughunter/config.json" "legacy BugHunter configuration"
     if [ -d "$HOME/.bughunter" ] && [ -z "$(find "$HOME/.bughunter" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
         rmdir "$HOME/.bughunter"
     fi
 else
-    echo "Preserved configuration: $HOME/.bughunter/config.json"
+    echo "Preserved configuration: $HOME/.agentnarna/config.json"
 fi
 
 if [ "$removed" -eq 0 ]; then
-    echo "No managed BugHunter installation found for the selected target."
+    echo "No managed AgentNarna installation found for the selected target."
 else
     echo "Done. Removed $removed managed item(s)."
 fi

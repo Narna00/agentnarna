@@ -146,3 +146,39 @@ class TestExploitFindingEvidenceDelimited:
         assert "BEGIN UNTRUSTED exploit evidence" in user_prompt
         assert "normal scanner output" in user_prompt
         assert user_prompt.count("END UNTRUSTED exploit evidence") == 1
+
+    def test_relevant_research_is_bounded_and_delimited(self, tmp_path, monkeypatch):
+        from brain import Brain
+        from tools import technique_intel
+
+        monkeypatch.setenv("AGENTNARNA_HOME", str(tmp_path))
+        ledger = technique_intel.default_ledger_path()
+        technique_intel.append_ledger(ledger, [
+            technique_intel._item(
+                "medium",
+                "https://example.org/waf-normalization",
+                "WAF normalization strategy",
+                "Compare proxy and origin path normalization using a harmless canary.",
+                tags=["waf", "403"],
+            )
+        ])
+
+        brain = Brain.__new__(Brain)
+        brain.enabled = True
+        brain.model = "test-model"
+        captured = {}
+
+        def fake_stream_history(messages, label, max_tokens=0):
+            captured["messages"] = messages
+            return "EXPLOIT_DONE"
+
+        brain._stream_history = fake_stream_history
+        brain.exploit_finding(
+            "https://target.example/admin", "WAF 403 normalization",
+            "403 blocked by edge policy", findings_dir="",
+        )
+
+        prompt = captured["messages"][1]["content"]
+        assert "BEGIN UNTRUSTED research technique cards" in prompt
+        assert "WAF normalization strategy" in prompt
+        assert prompt.count("END UNTRUSTED research technique cards") == 1

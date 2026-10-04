@@ -127,6 +127,7 @@ class TestBackupHelpers:
         # Only existing ones, ordered .1 then .3
         assert [bp.name for bp in bps] == ["f.jsonl.1", "f.jsonl.3"]
 
+    @pytest.mark.skipif(os.name == "nt", reason="asserts POSIX newline byte counts")
     def test_total_bytes(self, tmp_path):
         p = tmp_path / "f.jsonl"
         p.write_text("hello\n")

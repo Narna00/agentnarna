@@ -51,7 +51,7 @@ def extract_function(name: str) -> str:
     Trailing newline is stripped: callers append a statement, and `}\\n; cmd`
     is a bash syntax error (a lone `;` line).
     """
-    text = INSTALL.read_text()
+    text = INSTALL.read_text(encoding="utf-8")
     start = text.index(f"{name}()")
     end = text.index("\n}\n", start) + 3
     return text[start:end].rstrip()
@@ -96,6 +96,7 @@ def test_install_is_idempotent(tmp_path):
 
 # ── the guard that stops this class of bug from hiding again ───────────────
 
+@pytest.mark.skipif(os.name == "nt", reason="requires unprivileged directory symlinks")
 def test_empty_source_dir_fails_loudly(tmp_path):
     """A glob that matches nothing must exit non-zero, not report success.
 
@@ -172,7 +173,7 @@ def test_no_bare_root_relative_agents_glob():
     It only worked by accident on a flat checkout; on this split layout it
     silently installed nothing.
     """
-    for line in INSTALL.read_text().splitlines():
+    for line in INSTALL.read_text(encoding="utf-8").splitlines():
         code = line.split(" #", 1)[0]
         if not code.strip() or code.strip().startswith("#"):
             continue
@@ -186,7 +187,7 @@ def test_every_resolved_src_is_used():
     handled while nothing consumes it. `tools/` is intentionally absent here —
     install.sh only mentions it in comments.
     """
-    text = INSTALL.read_text()
+    text = INSTALL.read_text(encoding="utf-8")
     for var in ("AGENTS_SRC", "MCP_SRC"):
         assert f'{var}="$(resolve_src' in text, f"{var} is never resolved"
         assert text.count(var) >= 2, f"{var} resolved but never used"
@@ -201,7 +202,7 @@ def test_script_anchors_to_its_own_directory():
     covered the standalone path. Require the cd itself, and require it to be
     declared before the `--agent` dispatch.
     """
-    text = INSTALL.read_text()
+    text = INSTALL.read_text(encoding="utf-8")
     anchor = text.index('cd "$SCRIPT_DIR"') if 'cd "$SCRIPT_DIR"' in text else -1
     assert anchor != -1, "install.sh never cds to its own directory"
 

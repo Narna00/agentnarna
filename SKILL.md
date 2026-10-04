@@ -1,9 +1,9 @@
 ---
-name: bug-bounty
-description: Complete bug bounty workflow — recon (subdomain enumeration, asset discovery, fingerprinting, HackerOne scope, source code audit), pre-hunt learning (disclosed reports, tech stack research, mind maps, threat modeling), vulnerability hunting (IDOR, SSRF, XSS, auth bypass, CSRF, race conditions, SQLi, XXE, file upload, business logic, GraphQL, HTTP smuggling, cache poisoning, OAuth, timing side-channels, OIDC, SSTI, subdomain takeover, cloud misconfig, ATO chains, agentic AI), LLM/AI security testing (chatbot IDOR, prompt injection, indirect injection, ASCII smuggling, exfil channels, RCE via code tools, system prompt extraction, ASI01-ASI10), A-to-B bug chaining (IDOR→auth bypass, SSRF→cloud metadata, XSS→ATO, open redirect→OAuth theft, S3→bundle→secret→OAuth), bypass tables (SSRF IP bypass, open redirect bypass, file upload bypass), language-specific grep (JS prototype pollution, Python pickle, PHP type juggling, Go template.HTML, Ruby YAML.load, Rust unwrap), and reporting (7-Question Gate, 4 validation gates, human-tone writing, templates by vuln class, CVSS 3.1, PoC generation, always-rejected list, conditional chain table, submission checklist). Use for ANY bug bounty task — starting a new target, doing recon, hunting specific vulns, auditing source code, testing AI features, validating findings, or writing reports. 中文触发词：漏洞赏金、安全测试、渗透测试、漏洞挖掘、信息收集、子域名枚举、XSS测试、SQL注入、SSRF、安全审计、漏洞报告
+name: agentnarna
+description: Evidence-first workflow for authorized pentests and bug bounties. Use for scope review, recon, source review, web/API/cloud/Web3/LLM testing, control-aware strategy adaptation, exploit-chain validation, deterministic proof, false-positive rejection, and submission-ready reporting. Covers IDOR/BOLA, SSRF, XSS, auth and OAuth, CSRF, races, SQLi/NoSQLi, XXE, upload, business logic, GraphQL, request smuggling, cache poisoning, OIDC, SSTI, takeover, cloud misconfiguration, AI agent risks, language-specific review, and A-to-B chains. Treat research as hypothesis-only, keep active work inside explicit authorization, and promote a finding only when its own reproducible evidence proves impact. 中文触发词：漏洞赏金、安全测试、渗透测试、漏洞挖掘、信息收集、安全审计、漏洞报告
 ---
 
-# Bug Bounty Master Workflow
+# AgentNarna Master Workflow
 
 Full pipeline: Recon -> Learn -> Hunt -> Validate -> Report. One skill for everything.
 
@@ -38,10 +38,10 @@ Full pipeline: Recon -> Learn -> Hunt -> Validate -> Report. One skill for every
 4. **Validate before writing** -- check CHANGELOG, design docs, deployment scripts FIRST
 5. **One bug class at a time** -- go deep, don't spray
 6. **Verify data isn't already public** -- check web UI in incognito before reporting API "leaks"
-7. **5-MINUTE RULE** -- if a target shows nothing after 5 min probing (all 401/403/404), MOVE ON
+7. **5-MINUTE ADAPTATION RULE** -- if the same control fingerprint persists for 5 minutes, stop mutating payload spelling; choose a distinct strategy family and move on only when safe families are exhausted
 8. **IMPACT-FIRST HUNTING** -- ask "what's the worst thing if auth was broken?" If nothing valuable, skip target
 9. **CREDENTIAL LEAKS need exploitation proof** -- finding keys isn't enough, must PROVE what they access
-10. **STOP SHALLOW RECON SPIRALS** -- don't probe 403s, don't grep for analytics keys, don't check staging domains that lead nowhere
+10. **STOP SHALLOW MUTATION SPIRALS** -- treat 403/WAF/sanitizer responses as control fingerprints, pivot method/route/identity/workflow hypotheses, and never confuse a bypass-shaped status change with impact
 11. **BUSINESS IMPACT over vuln class** -- severity depends on CONTEXT, not just vuln type
 12. **UNDERSTAND THE TARGET DEEPLY** -- before hunting, learn the app like a real user
 13. **DON'T OVER-RELY ON AUTOMATION** -- automated scans hit WAFs, trigger rate limits, find the same bugs everyone else finds
@@ -1210,14 +1210,8 @@ When payout is being downgraded, use these counters:
 To use this as a Claude Code skill, copy this file to your skills directory:
 
 ```bash
-# Option A: Clone the repo and link the skill
-git clone https://github.com/Awarexone/Agentic-Bug-Hunter.git ~/.claude/skills/bug-bounty
-ln -s ~/.claude/skills/bug-bounty/SKILL.md ~/.claude/skills/bug-bounty/SKILL.md
-
-# Option B: Direct copy
-mkdir -p ~/.claude/skills/bug-bounty
-curl -s https://raw.githubusercontent.com/Awarexone/Agentic-Bug-Hunter/main/SKILL.md \
-  -o ~/.claude/skills/bug-bounty/SKILL.md
+# From an AgentNarna checkout
+./install.sh --agent claude
 ```
 
 Then in Claude Code, this skill loads automatically when you ask about bug bounty, recon, or vulnerability hunting.

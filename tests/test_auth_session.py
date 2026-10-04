@@ -1,7 +1,7 @@
 """Tests for tools/auth_session.py — auth-aware hunting plumbing.
 
 Covers:
-  - Env loading (BBHUNT_AUTH_HEADER, BBHUNT_COOKIE, BBHUNT_BEARER, BBHUNT_API_KEY)
+  - Env loading (AGENTNARNA_AUTH_HEADER/COOKIE/BEARER/API_KEY + legacy aliases)
   - File loading (JSON + .env style)
   - Explicit headers/cookie/bearer
   - session_id stability + sensitivity to header content
@@ -23,6 +23,9 @@ from tools.auth_session import (
     ENV_API_KEY,
     ENV_HEADERS,
     ENV_SESSION_ID,
+    LEGACY_ENV_COOKIE,
+    LEGACY_ENV_HEADERS,
+    LEGACY_ENV_SESSION_ID,
     add_cli_args,
     session_from_args,
 )
@@ -133,6 +136,14 @@ class TestFromEnv:
         names = sorted(s.headers_dict().keys())
         assert names == ["Authorization", "Cookie", "X-API-Key", "X-Foo"]
 
+    def test_legacy_cookie_alias_still_works(self):
+        s = AuthSession.from_env({LEGACY_ENV_COOKIE: "legacy=1"})
+        assert s.headers_dict() == {"Cookie": "legacy=1"}
+
+    def test_primary_cookie_wins_over_legacy_alias(self):
+        s = AuthSession.from_env({ENV_COOKIE: "new=1", LEGACY_ENV_COOKIE: "old=1"})
+        assert s.headers_dict() == {"Cookie": "new=1"}
+
 
 # ── File loading ──────────────────────────────────────────────────────────────
 
@@ -230,6 +241,8 @@ class TestOutput:
         assert ENV_SESSION_ID in overlay
         assert overlay[ENV_HEADERS] == "Cookie: abc"
         assert overlay[ENV_SESSION_ID] == s.session_id()
+        assert overlay[LEGACY_ENV_HEADERS] == overlay[ENV_HEADERS]
+        assert overlay[LEGACY_ENV_SESSION_ID] == overlay[ENV_SESSION_ID]
 
     def test_export_to_env_sets_vars(self):
         s = AuthSession(["Cookie: abc"])
@@ -239,10 +252,15 @@ class TestOutput:
         assert env[ENV_SESSION_ID] == s.session_id()
 
     def test_export_to_env_clears_stale_values_when_empty(self):
-        env = {ENV_HEADERS: "stale", ENV_SESSION_ID: "stale"}
+        env = {
+            ENV_HEADERS: "stale", ENV_SESSION_ID: "stale",
+            LEGACY_ENV_HEADERS: "stale", LEGACY_ENV_SESSION_ID: "stale",
+        }
         AuthSession().export_to_env(env)
         assert ENV_HEADERS not in env
         assert ENV_SESSION_ID not in env
+        assert LEGACY_ENV_HEADERS not in env
+        assert LEGACY_ENV_SESSION_ID not in env
 
     def test_export_to_env_does_not_mutate_os_environ(self, monkeypatch):
         # Caller passes their own dict — os.environ untouched.
@@ -349,7 +367,7 @@ class TestCliArgs:
         assert s.headers_dict() == {"Cookie": "session=abc"}
 
     def test_env_auto_detect_without_flag(self):
-        """If BBHUNT_* env vars are set, auth is picked up even without --auth-from-env."""
+        """AgentNarna env vars are picked up even without --auth-from-env."""
         args = self._parser().parse_args([])
         s = session_from_args(args, env={ENV_COOKIE: "session=abc"})
         assert s.headers_dict() == {"Cookie": "session=abc"}

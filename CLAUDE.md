@@ -1,6 +1,7 @@
-# Claude Bug Bounty — Plugin Guide
+# AgentNarna — Claude Code Plugin Guide
 
-This repo is a Claude Code plugin for professional bug bounty hunting across HackerOne, Bugcrowd, Intigriti, and Immunefi.
+This repository exposes AgentNarna skills and commands to Claude Code for
+authorized security research across supported disclosure platforms.
 
 ## What's Here
 

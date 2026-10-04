@@ -29,7 +29,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 API_URL = "https://api.pwnedpasswords.com/range/{}"
-USER_AGENT = "agentic-bug-hunter/breach_checker"
+USER_AGENT = "agentnarna/0.1 breach-checker"
 
 
 def sha1_prefix_suffix(password: str) -> tuple[str, str]:

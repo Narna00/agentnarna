@@ -1,0 +1,12 @@
+* text=auto
+
+# Linux launchers and sourced helpers must never acquire CRLF endings.
+*.sh text eol=lf
+
+# Python entrypoints include shebangs and are also linked as commands.
+*.py text eol=lf
+
+# Keep automation and package metadata stable across Windows/Linux clones.
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf

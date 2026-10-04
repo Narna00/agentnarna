@@ -1,5 +1,10 @@
 # Phase 1 — Existing Engine Validation
 
+> Historical pre-AgentNarna audit. Current code uses `AGENTNARNA_HOME`,
+> `AGENTNARNA_MEMORY_DIR`, and `~/.agentnarna/config.json`; the documented
+> `BUGHUNTER_*`, `BBHUNT_*`, and `~/.bughunter` names are retained below only
+> to explain the migration baseline.
+
 ## Summary
 `run_agent_hunt()` plus its per-session files (`agent_session.json`, `agent_trace.jsonl`, `agent_bump.txt`) **is the right integration seam**. It is a plain, importable Python function (`agent.py:1653`) that resolves/creates a session directory, persists all state there as JSON/JSONL, exposes a live append-only trace, and reads a bump file for mid-run steering. The desktop shell can drive it by function call and observe progress by tailing the session files, with no need to reimplement engine logic. Two boundaries differ from the assumption, though: the autonomous ReAct loop is **Ollama-only** (the multi-provider `brain.py` is wired to the CLI in `engine.py`, not to `run_agent_hunt()`), and the promised `hunt.py --agent` entry point **does not exist** in `tools/hunt.py`. All evidence in the session/trace is heavily truncated, so full request/response capture must be added by the desktop, not read out of the engine.
 

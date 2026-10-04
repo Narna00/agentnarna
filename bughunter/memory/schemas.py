@@ -25,13 +25,13 @@ PATTERN_ALL = PATTERN_REQUIRED | PATTERN_OPTIONAL
 
 
 def _current_session_id() -> str | None:
-    """Return the BBHUNT_SESSION_ID env var if set (the auth-aware hash).
+    """Return the AgentNarna auth-session hash when set.
 
     Findings logged during an authenticated run inherit the same 12-char hash
     used by audit.jsonl, so journal entries can be correlated with which
     identity discovered them. Anonymous runs leave the field unset.
     """
-    sid = os.environ.get("BBHUNT_SESSION_ID")
+    sid = os.environ.get("AGENTNARNA_SESSION_ID") or os.environ.get("BBHUNT_SESSION_ID")
     return sid if sid else None
 
 TARGET_REQUIRED = {"target", "first_hunted", "last_hunted", "schema_version"}
@@ -372,7 +372,7 @@ def make_journal_entry(
 ) -> dict:
     """Create and validate a new journal entry with current timestamp.
 
-    If session_id is None, falls back to BBHUNT_SESSION_ID env var so
+    If session_id is None, falls back to the AgentNarna session env var so
     findings made under an auth-aware hunt automatically carry the same
     identity hash that audit.jsonl uses.
     """
@@ -422,7 +422,7 @@ def make_pattern_entry(
 ) -> dict:
     """Create and validate a new pattern entry with current timestamp.
 
-    If session_id is None, falls back to BBHUNT_SESSION_ID env var so
+    If session_id is None, falls back to the AgentNarna session env var so
     patterns discovered under an auth-aware hunt record which identity
     surfaced the technique (important for IDOR / BOLA-class patterns).
     """

@@ -25,7 +25,7 @@ TARGET="${1:?Usage: $0 <target> [--quick]  (target = FQDN, IP, CIDR, or path to 
 QUICK_MODE="${2:-}"
 BASE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
-# Auth-aware hunting: load BBHUNT_AUTH_HEADERS / BBHUNT_SESSION_ID into
+# Auth-aware hunting: load AGENTNARNA_AUTH_HEADERS / AGENTNARNA_SESSION_ID into
 # BB_AUTH_ARGS=(-H 'Name: val' ...). Empty session = no-op.
 # shellcheck source=tools/_auth_helper.sh
 . "$(dirname "$0")/_auth_helper.sh"

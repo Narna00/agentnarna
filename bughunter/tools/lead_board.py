@@ -25,7 +25,10 @@ Claude reads `show`, says "I see X -> run skill Y", and `touch`es leads as it wo
 
 import argparse
 import contextlib
-import fcntl
+try:
+    import fcntl
+except ImportError:  # Windows
+    from memory._fcntl_compat import fcntl
 import glob
 import json
 import os

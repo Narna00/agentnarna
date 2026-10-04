@@ -6,6 +6,12 @@ from __future__ import annotations
 import os
 import stat
 
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    os.name == "nt", reason="Windows does not expose POSIX owner-only mode bits"
+)
+
 from memory.audit_log import AuditLog
 from memory.pattern_db import PatternDB
 

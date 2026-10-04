@@ -1,10 +1,10 @@
 {
   "mcpServers": {
-    "bughunter": {
-      "command": "bughunter",
+    "agentnarna": {
+      "command": "agentnarna",
       "args": ["mcp", "serve"],
       "env": {
-        "BBHUNT_MCP_APPROVE": "0"
+        "AGENTNARNA_MCP_APPROVE": "0"
       }
     }
   }

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Agentic-Bug-Hunter MCP server (stdio).
+AgentNarna MCP server (stdio).
 
 AI-accessible adapter over the existing bug-bounty research engine.
 Does not replace Burp / Caido / HackerOne MCP integrations.
@@ -45,8 +45,8 @@ except Exception:
 POLICY = PolicyEngine()
 
 mcp = MCPServer(
-    name="Agentic-Bug-Hunter",
-    title="Agentic-Bug-Hunter",
+    name="agentnarna",
+    title="AgentNarna",
     description=(
         "AI-powered security research and bug-bounty hunting toolkit "
         "for authorized security testing. Adapter over existing recon, hunt, "
@@ -80,7 +80,7 @@ def _ann(*, read_only: bool = False, open_world: bool = False, destructive: bool
 
 
 @mcp.tool(
-    title="BugHunter research",
+    title="AgentNarna research",
     annotations=_ann(open_world=True),
 )
 def bughunter_research(

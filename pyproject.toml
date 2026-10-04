@@ -3,18 +3,18 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agentic-bug-hunter"
-version = "6.0.1"
-description = "AI-powered bug bounty hunting — recon to report, in your terminal."
+name = "agentnarna"
+version = "0.1.0"
+description = "Evidence-first agentic security research for authorized pentests and bug bounties."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-authors = [{ name = "AwareXone" }]
+authors = [{ name = "AgentNarna contributors" }]
 keywords = ["security", "bug-bounty", "recon", "pentest", "ai-agent", "vulnerability"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
-    "Operating System :: POSIX",
+    "Operating System :: OS Independent",
     "Environment :: Console",
     "Topic :: Security",
     "Intended Audience :: Developers",
@@ -28,11 +28,12 @@ dependencies = [
 test = ["pytest>=8.3.2"]
 
 [project.urls]
-Homepage = "https://github.com/awarexone/Agentic-Bug-Hunter"
-Repository = "https://github.com/awarexone/Agentic-Bug-Hunter"
-Issues = "https://github.com/awarexone/Agentic-Bug-Hunter/issues"
+Upstream = "https://github.com/awarexone/Agentic-Bug-Hunter"
 
 [project.scripts]
+agentnarna = "bughunter.__main__:main"
+agentnarna-agent = "bughunter.__main__:agent_main"
+# Compatibility aliases for existing installations and scripts.
 bughunter = "bughunter.__main__:main"
 bughunter-agent = "bughunter.__main__:agent_main"
 

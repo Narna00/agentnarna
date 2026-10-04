@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-demo/app.py — INTENTIONALLY VULNERABLE web app for the bughunter.fun tutorial.
+demo/app.py — INTENTIONALLY VULNERABLE web app for the AgentNarna tutorial.
 
 Spins up a small shuvonsec.me lookalike on http://127.0.0.1:8080 with 6
 deliberate bugs the tool can detect end-to-end. Zero dependencies — pure

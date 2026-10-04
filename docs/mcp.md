@@ -1,11 +1,11 @@
 # MCP
 
-Use Agentic-Bug-Hunter directly from AI agents.
+Use AgentNarna directly from AI agents.
 
 ```text
 AI Agent
    ↓
-Agentic-Bug-Hunter MCP
+AgentNarna MCP
    ↓
 Scope → Recon → Hunt → Validate → Report → Memory
 ```
@@ -17,14 +17,14 @@ MCP is an **adapter** over the existing research engine — not a second scanner
 ```bash
 pip install 'mcp>=2.2.0'
 ./install.sh --agent mcp
-bughunter mcp doctor
-bughunter mcp serve
+agentnarna mcp doctor
+agentnarna mcp serve
 ```
 
 Client snippets:
 
-- Claude: `mcp/bughunter-mcp/claude-config.json`
-- OpenCode: `mcp/bughunter-mcp/opencode-config.json`
+- Claude: `bughunter/mcp/bughunter-mcp/claude-config.json`
+- OpenCode: `bughunter/mcp/bughunter-mcp/opencode-config.json`
 
 ## Docs
 

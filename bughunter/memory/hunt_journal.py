@@ -7,11 +7,15 @@ validate hooks can persist schema-validated entries with rotation.
 
 from __future__ import annotations
 
-import fcntl
+try:
+    import fcntl
+except ImportError:  # Windows
+    from memory._fcntl_compat import fcntl
 import json
 from pathlib import Path
 
 from memory.rotation import DEFAULT_KEEP, DEFAULT_MAX_BYTES, rotate_if_needed
+from memory.file_lock import exclusive_path_lock
 from memory.schemas import SchemaError, validate_journal_entry
 
 
@@ -32,15 +36,15 @@ class HuntJournal:
     def append(self, entry: dict) -> dict:
         """Validate and append one journal entry. Returns the validated entry."""
         validated = validate_journal_entry(entry)
-        rotate_if_needed(self.path, max_bytes=self.max_bytes, keep=self.keep_backups)
         line = json.dumps(validated, ensure_ascii=False, separators=(",", ":"))
-        with open(self.path, "a", encoding="utf-8") as f:
-            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-            try:
+        with exclusive_path_lock(self.path):
+            rotate_if_needed(
+                self.path, max_bytes=self.max_bytes,
+                keep=self.keep_backups, already_locked=True,
+            )
+            with open(self.path, "a", encoding="utf-8") as f:
                 f.write(line + "\n")
                 f.flush()
-            finally:
-                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
         return validated
 
     def read_all(self) -> list[dict]:

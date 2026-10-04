@@ -801,7 +801,7 @@ def write_validation_json(output_dir: str, info: dict, gate_notes: dict) -> str:
     try:
         from tools.research_log import draft_from_validation, new_finding_id
         finding_id = new_finding_id()
-        memory_dir = os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory")
+        memory_dir = os.environ.get("AGENTNARNA_MEMORY_DIR") or os.environ.get("BBHUNT_MEMORY_DIR", "hunt-memory")
         draft_from_validation(
             target=str(info.get("target") or "unknown"),
             vuln_class=str(info.get("vuln_type") or "unknown"),

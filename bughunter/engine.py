@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-engine.py — Standalone BugHunter CLI
+engine.py — Standalone agentnarna CLI
 Works WITHOUT Claude Code or any AI subscription.
 
 Providers (auto-detected, first available wins):
@@ -30,17 +30,17 @@ Providers (auto-detected, first available wins):
                     docs: https://docs.requesty.ai
 
 Usage:
-  ./engine.py setup                        one-time config wizard
-  ./engine.py recon  <target>              recon + AI surface analysis
-  ./engine.py hunt   <target>              full hunt pipeline
-  ./engine.py validate "<finding>"         7-Question Gate on a finding
-  ./engine.py report [--findings-dir DIR]  write submission-ready report
-  ./engine.py chain  [--findings-dir DIR]  build A->B->C exploit chain
-  ./engine.py triage "<finding>"           fast triage (pass/kill/downgrade)
-  ./engine.py chat                         interactive Q&A shell
-  ./engine.py models                       list available models
-  ./engine.py status                       show hunt status
-  ./engine.py providers                    show all providers + API key status
+  agentnarna setup                        one-time config wizard
+  agentnarna recon  <target>              recon + AI surface analysis
+  agentnarna hunt   <target>              full hunt pipeline
+  agentnarna validate "<finding>"         7-Question Gate on a finding
+  agentnarna report [--findings-dir DIR]  write submission-ready report
+  agentnarna chain  [--findings-dir DIR]  build A->B->C exploit chain
+  agentnarna triage "<finding>"           fast triage (pass/kill/downgrade)
+  agentnarna chat                         interactive Q&A shell
+  agentnarna models                       list available models
+  agentnarna status                       show hunt status
+  agentnarna providers                    show all providers + API key status
 """
 
 from __future__ import annotations
@@ -55,27 +55,27 @@ import textwrap
 from pathlib import Path
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-HERE     = Path(__file__).resolve().parent  # resolve symlink first so /usr/local/bin/bughunter -> repo dir
+HERE     = Path(__file__).resolve().parent  # resolve symlink first so /usr/local/bin/agentnarna -> repo dir
 AGENTS   = HERE / "agents"
 TOOLS    = HERE / "tools"
 # Writable output goes under a user data home, not the install dir, so the tool
 # works whether it runs from a git clone or a read-only pip install.
-# Override with BUGHUNTER_HOME; defaults to the clone dir if it is writable
-# (preserves legacy layout), else ~/.bughunter.
+# Override with AGENTNARNA_HOME; BUGHUNTER_HOME remains a migration alias.
 def _data_home():
     import os
-    env = os.environ.get("BUGHUNTER_HOME")
+    env = os.environ.get("AGENTNARNA_HOME") or os.environ.get("BUGHUNTER_HOME")
     if env:
         return Path(env).expanduser()
     if os.access(HERE, os.W_OK):
         return HERE
-    return Path.home() / ".bughunter"
+    return Path.home() / ".agentnarna"
 
 DATA_HOME = _data_home()
 RECON    = DATA_HOME / "recon"
 FINDINGS = DATA_HOME / "findings"
 REPORTS  = DATA_HOME / "reports"
-CONFIG   = Path.home() / ".bughunter" / "config.json"
+CONFIG   = Path.home() / ".agentnarna" / "config.json"
+LEGACY_CONFIG = Path.home() / ".bughunter" / "config.json"
 
 # ── Colors ─────────────────────────────────────────────────────────────────────
 GREEN  = "\033[0;32m"
@@ -101,13 +101,14 @@ def header(title: str):
 
 
 def load_config() -> dict:
-    if CONFIG.exists():
+    source = CONFIG if CONFIG.exists() else LEGACY_CONFIG
+    if source.exists():
         try:
-            return json.loads(CONFIG.read_text())
+            return json.loads(source.read_text())
         except json.JSONDecodeError as e:
-            warn(f"Corrupted config file {CONFIG}, using defaults: {e}")
+            warn(f"Corrupted config file {source}, using defaults: {e}")
         except OSError as e:
-            warn(f"Could not read config file {CONFIG}: {e}")
+            warn(f"Could not read config file {source}: {e}")
     return {}
 
 
@@ -144,15 +145,16 @@ COMMAND_ALIASES = {
 
 def _print_quick_help():
     print(textwrap.dedent("""
-    BugHunter — fast commands
+    agentnarna - evidence-first commands
 
-    bughunter help                 Show full help
-    bughunter setup                Configure your AI provider
-    bughunter recon target.com     Map the attack surface
-    bughunter hunt target.com      Run the full hunt pipeline
-    bughunter validate "finding"   Run the 7-Question Gate
-    bughunter report               Write a submission-ready report
-    bughunter status               Show pipeline status
+    agentnarna help                 Show full help
+    agentnarna setup                Configure your AI provider
+    agentnarna recon target.com     Map the attack surface
+    agentnarna hunt target.com      Run the full hunt pipeline
+    agentnarna validate "finding"   Run the proof gate
+    agentnarna report               Write verified findings only
+    agentnarna research --help      Sync technique intelligence
+    agentnarna status               Show pipeline status
 
     Short aliases:
       init=setup   p=providers   m=models   s=status   r=recon
@@ -235,6 +237,12 @@ def _run_shell(cmd: list[str], cwd: str | None = None, timeout: int = 3600,
     SECURITY-REVIEW-2026-08-22.md finding #5 for why shell=True with
     f-string-interpolated targets was a command injection bug.
     `env`, when given, is merged over the current environment."""
+    # ``echo`` is a shell builtin on Windows.  Implement the harmless builtin
+    # directly so callers keep argv semantics and metacharacters stay literal.
+    if os.name == "nt" and cmd and str(cmd[0]).lower() == "echo":
+        output = " ".join(str(part) for part in cmd[1:]) + "\n"
+        print(output, end="", flush=True)
+        return True, output
     proc_env = {**os.environ, **env} if env else None
     try:
         proc = subprocess.Popen(
@@ -258,7 +266,7 @@ def _run_shell(cmd: list[str], cwd: str | None = None, timeout: int = 3600,
 
 def cmd_setup(args):
     """Interactive setup wizard."""
-    header("BugHunter Setup")
+    header("agentnarna setup")
 
     providers = {
         "1":  ("ollama",     "Ollama     (local, FREE)       — needs ollama running locally"),
@@ -349,7 +357,7 @@ def cmd_setup(args):
                     saved_models = cfg.get("models", {})
                     current = saved_models.get("ollama") if isinstance(saved_models, dict) else None
                     default_index = models.index(current) + 1 if current in models else 1
-                    print("\nChoose the Ollama model BugHunter should use:\n")
+                    print("\nChoose the Ollama model agentnarna should use:\n")
                     for index, model_name in enumerate(models, start=1):
                         marker = " (current)" if model_name == current else ""
                         print(f"  {index}) {model_name}{marker}")
@@ -444,7 +452,7 @@ def cmd_providers(args):
         print(f"  {BOLD}{prov:<12}{NC} {tier[prov]:<16} {status:<30} {DIM}{note}{NC}{marker}")
 
     print(f"\n  Config: {CONFIG}")
-    print(f"  Change: ./engine.py setup\n")
+    print(f"  Change: agentnarna setup\n")
 
 
 def cmd_models(args):
@@ -453,7 +461,7 @@ def cmd_models(args):
     provider = getattr(args, "provider", None) or cfg.get("provider")
     client = _get_client(provider)
     if not client.available:
-        err(f"Provider '{client.provider}' not available. Run: ./engine.py setup")
+        err(f"Provider '{client.provider}' not available. Run: agentnarna setup")
         return
     models = client.list_models()
     info(f"Provider: {client.description}")
@@ -502,7 +510,7 @@ def cmd_recon(args):
     if result:
         print(f"\n{result}")
     else:
-        warn("AI analysis returned no output — check provider with: ./engine.py providers")
+        warn("AI analysis returned no output — check provider with: agentnarna providers")
 
 
 def cmd_hunt(args):
@@ -582,7 +590,7 @@ def cmd_report(args):
             findings_dir = str(targets[-1])
             info(f"Using findings dir: {findings_dir}")
         else:
-            err("No findings dir found. Use: ./engine.py report --findings-dir findings/<target>")
+            err("No findings dir found. Use: agentnarna report --findings-dir findings/<target>")
             sys.exit(1)
 
     header("Report Writer")
@@ -628,7 +636,7 @@ def cmd_chain(args):
     system = load_agent_prompt("chain-builder")
     client = _get_client()
     if not client.available:
-        err("No AI provider available. Run: ./engine.py setup")
+        err("No AI provider available. Run: agentnarna setup")
         sys.exit(1)
     sys.path.insert(0, str(HERE))
     from brain import BRAIN_SYSTEM  # noqa: PLC0415
@@ -640,10 +648,10 @@ def cmd_chain(args):
 
 def cmd_chat(args):
     """Interactive Q&A shell."""
-    header("BugHunter Chat")
+    header("agentnarna console")
     client = _get_client()
     if not client.available:
-        err("No AI provider available. Run: ./engine.py setup")
+        err("No AI provider available. Run: agentnarna setup")
         sys.exit(1)
 
     sys.path.insert(0, str(HERE))
@@ -676,7 +684,7 @@ def cmd_chat(args):
             print(f"\n{reply}\n")
             history.append({"user": user_input, "assistant": reply})
         else:
-            warn("No response — check provider with: ./engine.py providers")
+            warn("No response — check provider with: agentnarna providers")
 
 
 def cmd_status(args):
@@ -713,8 +721,26 @@ def cmd_status(args):
         model_note = f" | model: {model}" if model else " | model: automatic"
         print(f"{GREEN}{client.description}{model_note}{NC}")
     else:
-        print(f"{RED}not configured{NC} — run: ./engine.py setup")
+        print(f"{RED}not configured{NC} — run: agentnarna setup")
     print()
+
+
+def cmd_research(args):
+    """Ingest public research as source-linked hypotheses, never findings."""
+    from tools.technique_intel import main as intel_main
+
+    argv: list[str] = []
+    for value in getattr(args, "medium_tag", []) or []:
+        argv.extend(["--medium-tag", value])
+    for value in getattr(args, "feed", []) or []:
+        argv.extend(["--feed", value])
+    for value in getattr(args, "x_query", []) or []:
+        argv.extend(["--x-query", value])
+    for value in getattr(args, "url", []) or []:
+        argv.extend(["--url", value])
+    argv.extend(["--limit", str(getattr(args, "limit", 25))])
+    argv.extend(["--output", getattr(args, "output", "hunt-memory/technique-intel.jsonl")])
+    return intel_main(argv)
 
 
 def cmd_mcp(args):
@@ -743,31 +769,20 @@ def _read_stdin_or_prompt(prompt_text: str) -> str:
 
 
 def _print_banner():
-    G1  = "\033[1;32m"   # bright green
-    G2  = "\033[0;32m"   # normal green
-    G3  = "\033[2;32m"   # dim green
-    W   = "\033[1;37m"   # white bold
+    G1  = "\033[1;35m"
+    G2  = "\033[0;36m"
+    G3  = "\033[2;37m"
+    W   = "\033[1;37m"
     LINES = [
-        ("  ██████╗ ██╗   ██╗ ██████╗ ",                         G1),
-        ("  ██╔══██╗██║   ██║██╔════╝ ",                         G2),
-        ("  ██████╔╝██║   ██║██║  ███╗",                         G1),
-        ("  ██╔══██╗██║   ██║██║   ██║",                         G2),
-        ("  ██████╔╝╚██████╔╝╚██████╔╝",                         G1),
-        ("  ╚═════╝  ╚═════╝  ╚═════╝ ",                         G3),
-        ("  ██╗  ██╗██╗   ██╗███╗   ██╗████████╗███████╗██████╗ ", G1),
-        ("  ██║  ██║██║   ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗", G2),
-        ("  ███████║██║   ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝", G1),
-        ("  ██╔══██║██║   ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗", G2),
-        ("  ██║  ██║╚██████╔╝██║ ╚████║   ██║   ███████╗██║  ██║",  G1),
-        ("  ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝", G3),
+        ("  ▄▀█ █▀▀ █▀▀ █▄░█ ▀█▀ █▄░█ ▄▀█ █▀█ █▄░█ ▄▀█", G1),
+        ("  █▀█ █▄█ ██▄ █░▀█ ░█░ █░▀█ █▀█ █▀▄ █░▀█ █▀█", G2),
     ]
     print()
     for line, color in LINES:
         print(f"{color}{line}{NC}")
     print()
-    print(f"  {G3}by {W}AwareXone{NC}  {G3}·{NC}  {G2}awarexone.com{NC}  {G3}·{NC}  {G1}bughunter.fun{NC}")
-    print(f"  {G3}github.com/{G2}Awarexone{G3}/Agentic-Bug-Hunter{NC}")
-    print(f"  {G3}free · open · no subscription required{NC}")
+    print(f"  {W}evidence-first security research{NC}")
+    print(f"  {G3}lead → adapt → verify → report{NC}")
     print()
 
 
@@ -776,22 +791,22 @@ def _print_banner():
 def main():
     argv = _normalize_cli_argv(sys.argv[1:])
     parser = argparse.ArgumentParser(
-        prog="engine.py",
-        description="Standalone BugHunter Engine — works without Claude Code",
+        prog="agentnarna",
+        description="agentnarna - evidence-first authorized security research",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent("""
         Free setup (zero subscription):
           curl -fsSL https://ollama.ai/install.sh | sh
           ollama pull qwen2.5:14b
-          ./engine.py setup
-          ./engine.py recon target.com
+          agentnarna setup
+          agentnarna recon target.com
 
-        Free cloud (Groq — very fast):
+        Free cloud (Groq - very fast):
           export GROQ_API_KEY=gsk_...
-          ./engine.py recon target.com
+          agentnarna recon target.com
 
         Switch providers anytime:
-          ./engine.py setup
+          agentnarna setup
         """),
     )
     parser.add_argument("--provider", "-p",
@@ -837,6 +852,18 @@ def main():
     p_chain.add_argument("--findings-dir", default="", help="Path to findings/<target> directory")
     p_chain.add_argument("finding", nargs="?", default="", help="Bug A description (or pipe via stdin)")
 
+    p_research = sub.add_parser(
+        "research", aliases=["intel-sync"],
+        help="Ingest Medium/X/URL research as hypothesis-only technique intel",
+    )
+    p_research.add_argument("--medium-tag", action="append", default=[], help="Medium tag RSS feed")
+    p_research.add_argument("--feed", action="append", default=[], help="RSS/Atom feed URL")
+    p_research.add_argument("--x-query", action="append", default=[], help="X recent-search query (X_BEARER_TOKEN)")
+    p_research.add_argument("--url", action="append", default=[], help="Explicit public article URL")
+    p_research.add_argument("--limit", type=int, default=25)
+    from tools.technique_intel import default_ledger_path
+    p_research.add_argument("--output", default=str(default_ledger_path()))
+
     p_mcp = sub.add_parser("mcp", help="MCP server / doctor / tool catalog")
     p_mcp.add_argument(
         "mcp_command",
@@ -878,6 +905,8 @@ def main():
         "chain":     cmd_chain,
         "chat":      cmd_chat,
         "status":    cmd_status,
+        "research":  cmd_research,
+        "intel-sync": cmd_research,
         "mcp":       cmd_mcp,
     }
 

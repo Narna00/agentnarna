@@ -9,7 +9,7 @@ case "$2" in
   completed|failed|abandoned) ;;
   *) echo "outcome must be completed, failed, or abandoned" >&2; exit 1 ;;
 esac
-DIR="${HOME}/Library/Application Support/bughunter"
+DIR="${HOME}/Library/Application Support/agentnarna"
 mkdir -p "$DIR"
 chmod 700 "$DIR"
 printf '%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" >> "$DIR/user-test.log"

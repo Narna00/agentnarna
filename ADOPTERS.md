@@ -1,13 +1,10 @@
 # Adopters
 
-Teams, researchers, and projects using **BugHunter**.
+Teams and researchers using **AgentNarna** may add a real, verifiable entry by
+pull request.
 
-Using it? Add yourself with a quick pull request to this file — your name, a link, and a one-line note on how you use it. **Please add real, verifiable entries only.**
-
-| Adopter | Link | How they use BugHunter |
+| Adopter | Link | How they use AgentNarna |
 |---|---|---|
-| AwareXone | https://awarexone.com | Powers and sponsors the project — AI agent against scams & fraud |
+| _Add your organization_ | | |
 
----
-
-To add your organization: edit the table above and open a pull request. If you'd rather not be listed publicly, that's completely fine — no pressure.
+Participation is optional; private users do not need to identify themselves.

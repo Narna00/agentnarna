@@ -38,26 +38,37 @@ def run_cmd(cmd, timeout=15):
     """Run cmd (an argv list — never a shell string) without a shell."""
     proc = None
     try:
+        group_args = (
+            {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+            if os.name == "nt"
+            else {"preexec_fn": os.setsid}
+        )
         proc = subprocess.Popen(
             cmd, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True, preexec_fn=os.setsid,
+            text=True, **group_args,
         )
         stdout, stderr = proc.communicate(timeout=timeout)
         return proc.returncode == 0, stdout, stderr
     except subprocess.TimeoutExpired:
         if proc is not None:
-            try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            except Exception:
+            if os.name == "nt":
                 proc.kill()
+            else:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except Exception:
+                    proc.kill()
             proc.wait()
         return False, "", "timeout"
     except Exception as e:
         if proc is not None:
-            try:
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
-            except Exception:
+            if os.name == "nt":
                 proc.kill()
+            else:
+                try:
+                    os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                except Exception:
+                    proc.kill()
             proc.wait()
         return False, "", str(e)
 

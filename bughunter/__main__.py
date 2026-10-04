@@ -1,8 +1,9 @@
 """Console-script entrypoints.
 
-`bughunter`        -> engine.main   (the recon/hunt/chat/mcp dispatcher; the
-                                     legacy install.sh symlinked engine.py here)
-`bughunter-agent`  -> agent.main    (the autonomous session runner)
+`agentnarna`        -> engine.main   (recon/hunt/verify/report dispatcher)
+`agentnarna-agent`  -> agent.main    (autonomous session runner)
+
+The old ``bughunter`` names remain compatibility aliases in pyproject.toml.
 
 Both insert this package dir on sys.path first so the package's flat internal
 imports (`from brain import ...`, `from tools.scope_checker import ...`) resolve.

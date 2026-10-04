@@ -5,13 +5,17 @@ Patterns are stored in a JSONL file, one entry per line.
 Matching supports partial tech stack overlap for cross-target learning.
 """
 
-import fcntl
+try:
+    import fcntl
+except ImportError:  # Windows
+    from memory._fcntl_compat import fcntl
 import json
 import os
 import sys
 from pathlib import Path
 
 from memory.rotation import DEFAULT_KEEP, DEFAULT_MAX_BYTES, rotate_if_needed
+from memory.file_lock import exclusive_path_lock
 from memory.schemas import validate_pattern_entry, SchemaError
 
 
@@ -34,12 +38,52 @@ class PatternDB:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.max_bytes = max_bytes
         self.keep_backups = keep_backups
+        try:
+            self._approx_bytes = self.path.stat().st_size
+        except FileNotFoundError:
+            self._approx_bytes = 0
+        self._append_fd: int | None = None
         # Dedup index of (target, vuln_class, technique) keys. Populated lazily
         # on first save() so re-opening an existing DB stays correct without
         # paying the read cost up-front. Cross-process dedup is best-effort:
         # two processes with independent instances can each pass the dedup
         # check before either writes. The cost is one wasted JSONL row.
         self._dedup_keys: set[tuple[str, str, str]] | None = None
+
+    def _close_append_fd(self) -> None:
+        if self._append_fd is not None:
+            try:
+                os.close(self._append_fd)
+            finally:
+                self._append_fd = None
+
+    def close(self) -> None:
+        """Release the cached Windows append handle, if one is open."""
+        self._close_append_fd()
+
+    def __del__(self):
+        try:
+            self._close_append_fd()
+        except Exception:
+            # Interpreter shutdown may already have torn down ``os``.
+            pass
+
+    def _windows_append_fd(self) -> int:
+        """Return a live append fd, reopening after another process rotates."""
+        if self._append_fd is not None:
+            try:
+                live = self.path.stat()
+                opened = os.fstat(self._append_fd)
+                if (live.st_dev, live.st_ino) != (opened.st_dev, opened.st_ino):
+                    self._close_append_fd()
+            except (FileNotFoundError, OSError):
+                self._close_append_fd()
+
+        if self._append_fd is None:
+            from memory._fcntl_compat import open_shared_append_fd
+
+            self._append_fd = open_shared_append_fd(self.path)
+        return self._append_fd
 
     @staticmethod
     def _dedup_key(entry: dict) -> tuple[str, str, str]:
@@ -83,21 +127,37 @@ class PatternDB:
         line = json.dumps(validated, separators=(",", ":")) + "\n"
         encoded = line.encode("utf-8")
 
-        rotate_if_needed(self.path, max_bytes=self.max_bytes, keep=self.keep_backups)
-
-        fd = os.open(str(self.path), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX)
+        with exclusive_path_lock(self.path):
+            # Reconcile our fast local counter with the live file while under
+            # the cross-process mutex. Another hunter process may have appended
+            # since this instance was created.
+            try:
+                self._approx_bytes = self.path.stat().st_size
+            except FileNotFoundError:
+                self._approx_bytes = 0
+            if self._approx_bytes >= self.max_bytes:
+                self._close_append_fd()
+                if rotate_if_needed(
+                    self.path, max_bytes=self.max_bytes,
+                    keep=self.keep_backups, already_locked=True,
+                ):
+                    self._approx_bytes = 0
+            if os.name == "nt":
+                fd = self._windows_append_fd()
+                close_after_write = False
+            else:
+                fd = os.open(str(self.path), os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+                close_after_write = True
             try:
                 written = os.write(fd, encoded)
                 if written != len(encoded):
                     raise OSError(f"Partial write: {written}/{len(encoded)} bytes")
             finally:
-                fcntl.flock(fd, fcntl.LOCK_UN)
-        finally:
-            os.close(fd)
+                if close_after_write:
+                    os.close(fd)
 
         self._dedup_keys.add(key)
+        self._approx_bytes += len(encoded)
         return True
 
     def read_all(self, *, validate: bool = True) -> list[dict]:

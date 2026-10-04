@@ -7,6 +7,15 @@ description: Use at the START of any bug bounty hunting session, when switching 
 
 Master orchestrator for hunting sessions. Combines the 5-phase non-linear workflow with the critical thinking framework that separates top 1% hunters from the rest.
 
+Treat every control response as data. A 403, WAF block, sanitizer, CSP, or rate
+limit closes one technique—not the hypothesis. When a specific candidate exists,
+use `skills/adaptive-exploit-validation` to fingerprint the response and try a
+distinct, low-impact strategy family. Stop on proof, scope/rule boundaries,
+safety/rate limits, or genuine strategy exhaustion.
+
+Use `skills/research-intelligence` for source-linked current techniques. Match
+research prerequisites to the observed target before spending a request on it.
+
 ---
 
 ## PART 1: MINDSET (How to Think)
