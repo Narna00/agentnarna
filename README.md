@@ -52,7 +52,7 @@ Python 3.10+, Git, and Bash are required. Replace `YOUR_USERNAME` after this
 repository is published under your GitHub account.
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/agentnarna.git
+git clone https://github.com/narna00/agentnarna.git
 cd agentnarna
 chmod +x install.sh uninstall.sh
 ./install.sh --agent standalone
