@@ -1,216 +1,258 @@
-# agentnarna
+# AgentNarna
 
-Evidence-first agentic security research for authorized pentests and bug bounty
-programs.
+AgentNarna is an OpenCode-powered security research workspace for authorized
+pentests and bug bounty programs. It is not merely a collection of terminal
+scripts: OpenCode is the primary interface, while the repository supplies the
+specialized skills, commands, agents, memory, scanners, validation gates, and
+reporting workflow behind it.
 
-agentnarna separates attack-surface observations from actual findings. A lead is
-promoted only after a deterministic verifier reproduces real impact, and the
-report writer can see only the evidence linked to that exact validation record.
+> Use AgentNarna only on assets and techniques explicitly authorized by the
+> engagement or bug bounty program. Reports remain subject to human review.
 
-> Use only on assets and techniques explicitly authorized by the engagement or
-> program policy. The tool does not submit reports automatically.
+## Launch the full platform
 
-## Why this fork exists
-
-Many automated hunting flows overproduce artifacts, stop at controls, and let
-scanner confidence turn into report language. agentnarna changes the operating
-model:
-
-- **Adaptive validation:** 403/WAF/sanitizer/CSP/rate-limit responses are
-  fingerprinted and used to choose a different strategy family.
-- **Verified-only reporting:** one verified issue cannot promote unrelated
-  scanner output from the same directory.
-- **Minimal persistence by default:** rejected drafts, `NO_REPORTS`, and verbose
-  model workings are not saved unless audit mode is enabled.
-- **Source-linked learning:** Medium, X, RSS, HackerOne, and advisory material
-  becomes hypothesis-only intel—not executable instructions or proof.
-- **A visible proof spine:** the local dashboard distinguishes leads,
-  investigating candidates, verified findings, suppressed candidates, and final
-  submission artifacts.
-
-No automated system can guarantee a bounty or replace the judgment of a skilled
-manual tester. Reliability here means a stricter false-positive boundary,
-measurable verification, and better continuity between attempts.
-
-## Proof model
-
-```text
-lead -> candidate -> verified finding -> reportable -> human submission
-          |                 |
-          |                 +-- fresh deterministic oracle + linked evidence
-          +-- never appears in a report on scanner confidence alone
-```
-
-Every reportable item needs its own `validation.json` with
-`status=validated_finding` and a confirmed verifier result. Evidence files must
-be explicitly linked from that validation record and remain inside the finding
-directory.
-
-## Install from GitHub on Linux
-
-Python 3.10+, Git, and Bash are required. Replace `YOUR_USERNAME` after this
-repository is published under your GitHub account.
+Requirements: Linux, Git, Bash, Python 3.10+, and
+[OpenCode](https://opencode.ai).
 
 ```bash
 git clone https://github.com/narna00/agentnarna.git
 cd agentnarna
-chmod +x install.sh uninstall.sh
-./install.sh --agent standalone
-agentnarna setup
+
+# Recommended: install the external recon/scanning tools.
+chmod +x install_tools.sh install.sh
+./install_tools.sh
+
+# Install all AgentNarna skills, commands, and agents into this workspace.
+./install.sh --agent opencode --project
+
+# This is the main AgentNarna experience.
+opencode
 ```
 
-The installer creates `agentnarna` in `/usr/local/bin` when writable, otherwise
-in `~/.local/bin`. It also creates `bughunter` as a migration alias. Rerun the
-same installer after `git pull` to update both links.
+Inside OpenCode, speak naturally:
 
-For an isolated Python environment instead:
+```text
+recon target.example
+hunt target.example
+run autopilot on target.example in normal mode
+test the authorization boundary with user A and user B
+validate this finding
+write a submission-ready report
+```
+
+OpenCode reads `AGENTS.md` from the repository and discovers the installed
+`.opencode/skills`, `.opencode/commands`, and `.opencode/agents` directories.
+The installer copies the complete workspace; it does not replace it with a
+smaller command-line interface.
+
+## What is included
+
+The OpenCode workspace currently contains:
+
+- **40+ hunting commands** covering recon, exploitation, validation, reporting,
+  scope, memory, cloud, mobile, Web3, LLM applications, source review, and PoCs.
+- **21 specialized skills** with routing for vulnerability classes, platforms,
+  controls, and target technologies.
+- **10 cooperating agents** for recon ranking, autonomous hunting, credentials,
+  validation, exploit chains, Web3, tokens, and report writing.
+- **70+ local tools** and integrations for recon, scanning, verification,
+  evidence management, Burp, Caido, HackerOne, and MCP clients.
+- Persistent hunt memory, resumable sessions, audit logs, scope enforcement,
+  adaptive validation, and verified-only report generation.
+
+External tools are helpers. OpenCode coordinates the workflow, selects the
+relevant skill or agent, interprets results, changes strategy, and maintains
+the investigation state.
+
+## Main workflow
+
+```text
+OpenCode
+   ↓
+scope → recon → attack-surface ranking → focused hunt
+   ↓                                      ↓
+memory ← control fingerprint ← adaptive validation
+   ↓                                      ↓
+suppressed candidate              deterministic proof
+                                          ↓
+                              verified finding → report
+```
+
+### Recon and attack-surface analysis
+
+```text
+recon target.example
+surface target.example
+intel target.example
+scope-aggregate program-name
+```
+
+### Focused and autonomous hunting
+
+```text
+hunt target.example
+run autopilot on target.example in normal mode
+pick up the previous hunt for target.example
+test this GraphQL workflow for cross-tenant authorization failures
+audit this LLM application for tool and data boundary failures
+```
+
+### Validation and reporting
+
+```text
+validate this finding
+verify the claimed impact with a fresh session
+build an exploit chain from the verified findings
+write a HackerOne report using only linked evidence
+```
+
+## Commands
+
+OpenCode invokes these from natural-language requests. The command documents
+remain available under `commands/` for transparent review.
+
+| Area | Commands |
+|---|---|
+| Core workflow | `recon`, `hunt`, `autopilot`, `surface`, `pickup`, `remember` |
+| Proof and reporting | `validate`, `verify`, `triage`, `chain`, `poc`, `report`, `screenshot` |
+| Scope and intelligence | `scope`, `scope-aggregate`, `intel`, `breach-check`, `osint-employees` |
+| Web/API testing | `bypass-403`, `cors`, `crlf`, `domxss`, `jwt-scan`, `nosqli`, `oob`, `param-discover`, `spray` |
+| Recon and exposure | `scan-cves`, `secrets-hunt`, `takeover`, `wordlist-gen`, `portscan`, `cloud-recon` |
+| Source and infrastructure | `sast`, `cicd-security` through skills, `arsenal`, `memory-gc`, `dashboard` |
+| AI and agentic systems | `llm-app-audit`, `llm-redteam` |
+| Web3 | `web3-audit`, `token-scan` |
+
+## Skills
+
+| Skill | Purpose |
+|---|---|
+| `bug-bounty` | Master workflow and task routing |
+| `bb-methodology` | Non-linear human-style hunting methodology |
+| `adaptive-exploit-validation` | Learn from controls and change strategy families |
+| `triage-validation` | Seven-question gate and deterministic proof boundary |
+| `report-writing` | Submission-ready, evidence-bound reports |
+| `research-intelligence` | Medium, X, RSS, disclosure, and advisory technique cards |
+| `web2-recon` | Asset discovery and attack-surface mapping |
+| `web2-vuln-classes` | Web/API vulnerability classes and control-aware testing |
+| `graphql-audit` | GraphQL schema, resolver, auth, and batching risks |
+| `cloud-pentest` | AWS, Azure, GCP, storage, identity, and metadata surfaces |
+| `mobile-pentest` | Android/iOS static and dynamic review |
+| `client-reverse` | Client, bundle, protocol, and desktop reverse engineering |
+| `cicd-security` | Pipeline, runner, artifact, and secret boundary review |
+| `credential-attack` | Authorized authentication and credential workflow assessment |
+| `agentic-app-audit` | Tool-use, memory, prompt, and agent authorization boundaries |
+| `llm-redteam` | LLM application and model integration testing |
+| `mcp-server-audit` | MCP tools, transports, authorization, and confused-deputy review |
+| `security-arsenal` | Payload/tool routing and technique references |
+| `argus` | Recon and investigation support |
+| `web3-audit` | Smart-contract and DeFi testing |
+| `meme-coin-audit` | Token authority, liquidity, and rug-pull analysis |
+
+## What AgentNarna improves
+
+### Adaptive validation
+
+A 403, WAF page, sanitizer, CSP, or rate limit is treated as a control
+fingerprint. The investigation records attempted strategy families and requires
+the next attempt to test a different assumption—identity, route, parser,
+encoding stage, workflow state, or first-party surface—instead of blindly
+mutating the same payload.
+
+The agent stops when meaningful, in-scope strategy families are exhausted. It
+does not pretend every target must contain a vulnerability.
+
+### Verified-only findings
+
+Scanner output is a lead, not a finding. Each reportable item must have its own
+`validation.json`, a confirmed deterministic verifier result, and evidence
+linked specifically to that validation record. Evidence from one verified issue
+cannot promote unrelated scanner output.
+
+```text
+lead → candidate → verified finding → reportable → human submission
+          └──────── rejected/suppressed when proof fails
+```
+
+### Compact research intelligence
+
+Medium tags and publications use public RSS/Atom and require no account:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install -e .
-agentnarna --help
+agentnarna research --medium-tag web-security --medium-tag bug-bounty
 ```
 
-Uninstall the global launchers without deleting saved configuration:
-
-```bash
-./uninstall.sh --agent standalone --yes
-```
-
-External recon tools are optional and discovered at runtime. See
-[`install_tools.sh`](install_tools.sh) and
-[`bughunter/tools/README.md`](bughunter/tools/README.md).
-
-## Core commands
-
-```bash
-agentnarna recon target.example
-agentnarna hunt target.example
-agentnarna validate "candidate description"
-agentnarna report --findings-dir findings/target.example
-agentnarna status
-```
-
-Run the local operator dashboard:
-
-```bash
-python3 bughunter/tools/hunt_dashboard.py serve --port 8777
-```
-
-The dashboard binds to loopback by default and includes Host-header protection.
-
-## Research intelligence
-
-Medium uses public RSS/Atom and needs no credentials:
-
-```bash
-agentnarna research \
-  --medium-tag web-security \
-  --medium-tag bug-bounty
-```
-
-X recent search uses the official API and a bearer token from your X developer
-project:
+X recent search uses the official API:
 
 ```bash
 export X_BEARER_TOKEN="..."
-agentnarna research \
-  --x-query '(bug bounty OR pentest) (bypass OR writeup) -is:retweet'
+agentnarna research --x-query '(bug bounty OR pentest) (bypass OR writeup) -is:retweet'
 ```
 
-Other feeds and articles can be ingested explicitly:
+OpenCode can then use the local research ledger during a hunt. At most three
+relevance-ranked cards and 1,800 characters enter an exploit prompt. Posts are
+untrusted hypotheses and never count as proof.
 
-```bash
-agentnarna research --feed https://example.org/security/feed.xml
-agentnarna research --url https://example.org/research/article
-```
+### Minimal token waste
 
-The default ledger is `$AGENTNARNA_HOME/hunt-memory/technique-intel.jsonl`
-(the repository root for a source checkout). The exploit loop automatically
-loads at most three relevance-ranked cards and caps them at 1,800 characters,
-so research does not consume the whole model context. Entries are
-deduplicated, attributed, treated as untrusted external content, and labeled
-`hypothesis_only_requires_live_verification`.
-
-## Adaptive validation
-
-The exploit loop classifies the latest response, remembers attempted strategy
-families, and recommends a genuinely different next direction. Examples:
-
-- 403/WAF: path normalization, safe method semantics, proxy routing, or an
-  alternate first-party implementation.
-- XSS/sanitization: map output context, decoding stages, alternate sinks, CSP
-  boundaries, and confirm only with a browser execution oracle.
-- Authorization: compare anonymous, controlled identity A, and controlled
-  identity B; status differences alone are not impact.
-- Rate controls: identify the legitimate keying boundary without causing load.
-
-Generated commands still require operator confirmation before execution. This
-keeps the agent inside the current scope and prevents target-controlled text
-from silently turning into shell execution.
-
-## Artifact modes
-
-Minimal is the default:
+Minimal artifact mode is the default. It retains actionable state, evidence,
+and final report candidates without saving rejected report drafts or verbose
+model transcripts.
 
 ```bash
 export AGENTNARNA_ARTIFACT_MODE=minimal
 ```
 
-It retains compact actionable state, linked proof, and final report candidates.
-For a full gate/exploit reasoning trail:
+Use `audit` only when the complete investigation trail is required.
+
+## Operator dashboard
+
+The local dashboard is an additional view of hunt state; it is not a
+replacement for OpenCode.
 
 ```bash
-export AGENTNARNA_ARTIFACT_MODE=audit
+python3 bughunter/tools/hunt_dashboard.py serve --port 8777
 ```
 
-`BBHUNT_ARTIFACT_MODE`, `BUGHUNTER_HOME`, and the old CLI names remain migration
-aliases. New data/config locations are controlled with `AGENTNARNA_HOME` and
-`~/.agentnarna/config.json`.
+It shows attack-surface state, leads, active investigations, verified findings,
+suppressed candidates, and report artifacts.
 
-## Skills
+## Optional standalone CLI
 
-The existing domain skills remain available. Two cross-cutting skills define
-the new behavior:
-
-- [`adaptive-exploit-validation`](skills/adaptive-exploit-validation/SKILL.md)
-- [`research-intelligence`](skills/research-intelligence/SKILL.md)
-
-The master methodology, validation, and reporting skills route through those
-contracts. Run the bundled skill validator when changing a skill:
+Standalone mode is retained for automation, CI, and users who do not want an
+agent harness. It is **not** the primary OpenCode interface.
 
 ```bash
-python <skill-creator>/scripts/quick_validate.py skills/adaptive-exploit-validation
+./install.sh --agent standalone
+agentnarna setup
+agentnarna hunt target.example
 ```
 
-## Tests
+The legacy `bughunter` command remains a compatibility alias.
+
+## Other supported harnesses
 
 ```bash
-python -m pip install -e '.[test]'
-python -m pytest -q
+./install.sh                         # Claude Code global integration
+./install.sh --agent opencode        # OpenCode global integration
+./install.sh --agent codex --project # project-local Codex skills
+./install.sh --agent pi --project    # project-local Pi integration
+./install.sh --agent all             # every global target
 ```
 
-The suite includes false-positive fixtures, deterministic verifier benchmarks,
-evidence provenance, scope enforcement, prompt-injection delimiting, report
-gating, shell confirmation, and dashboard safety.
+See `OPENCODE.md`, `CLAUDE.md`, and `docs/` for integration details.
 
-## Project layout
+## Testing
 
-```text
-bughunter/engine.py                 CLI and provider dispatch
-bughunter/brain.py                  reasoning, adaptive exploit loop, report gate
-bughunter/tools/adaptive_strategy.py response fingerprint and strategy routing
-bughunter/tools/report_evidence.py  per-finding verified evidence binding
-bughunter/tools/technique_intel.py  Medium/X/RSS/article ingestion
-bughunter/tools/verifiers/          deterministic vulnerability oracles
-skills/                             agent skills and methodology
-site/index.html                     agentnarna product UI
-tests/                              regression and verifier benchmark suite
+```bash
+python3 -m pip install -e '.[test]'
+python3 -m pytest -q
 ```
+
+GitHub Actions tests Python 3.10–3.12 and performs an Ubuntu clone/install
+smoke test.
 
 ## Attribution
 
-agentnarna is based on the MIT-licensed
+AgentNarna is based on the MIT-licensed
 [AwareXone Agentic Bug Hunter](https://github.com/Awarexone/Agentic-Bug-Hunter).
-The upstream license and copyright notice are preserved in [`LICENSE`](LICENSE).
+The upstream license and copyright notice remain in `LICENSE`.

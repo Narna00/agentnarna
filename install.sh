@@ -37,8 +37,13 @@ usage() {
     cat <<'EOF'
 Usage: ./install.sh [--agent claude|opencode|pi|codex|agents|standalone|mcp|all] [--global|--project]
 
+Primary OpenCode workspace:
+  ./install.sh --agent opencode --project
+                                  Install the full AgentNarna workspace here
+  opencode                        Launch the interactive hunting platform
+
 Defaults:
-  ./install.sh                    Install for Claude Code globally
+  ./install.sh                    Install for Claude Code globally (compatibility)
 
 Standalone (no subscription needed):
   ./install.sh --agent standalone Install or update the 'agentnarna' command
@@ -50,6 +55,7 @@ Standalone (no subscription needed):
                                     agentnarna h target.com
 
 Examples:
+  ./install.sh --opencode         Install OpenCode integration globally (shortcut)
   ./install.sh --agent opencode   Install OpenCode skills + commands globally
   ./install.sh --agent pi         Install Pi skills + prompt templates globally
   ./install.sh --agent agents     Install shared Agent Skills to ~/.agents/skills
@@ -74,6 +80,12 @@ while [ "$#" -gt 0 ]; do
             ;;
         --all)
             AGENT="all"
+            ;;
+        --opencode)
+            AGENT="opencode"
+            ;;
+        --claude)
+            AGENT="claude"
             ;;
         --global)
             SCOPE="global"
@@ -212,11 +224,16 @@ install_opencode() {
     echo "Done: $root"
     echo ""
     echo "OpenCode also reads AGENTS.md from the project root. Keep this repo's AGENTS.md committed for portable project instructions."
-    echo "Start hunting:"
+    echo ""
+    echo "Start the full AgentNarna workspace from this repository:"
     echo "  opencode"
-    echo "  opencode help"
-    echo "  opencode recon target.com"
-    echo "  /recon target.com"
+    echo ""
+    echo "Then use natural language inside OpenCode:"
+    echo "  recon target.com"
+    echo "  hunt target.com"
+    echo "  run autopilot on target.com"
+    echo "  validate this finding"
+    echo "  write the report"
 }
 
 install_pi() {

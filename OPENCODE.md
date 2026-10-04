@@ -1,6 +1,8 @@
 # AgentNarna — OpenCode Guide
 
-This repo is a professional bug bounty hunting framework for OpenCode, covering HackerOne, Bugcrowd, Intigriti, and Immunefi.
+This repository is the full AgentNarna hunting workspace for OpenCode—not a
+wrapper around the standalone CLI. OpenCode coordinates the skills, commands,
+agents, tools, hunt memory, validation, and report workflow.
 
 ## Installation
 
@@ -19,16 +21,17 @@ You also need [OpenCode](https://opencode.ai) installed.
 ### Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/agentnarna.git
+git clone https://github.com/Narna00/agentnarna.git
 cd agentnarna
 chmod +x install_tools.sh && ./install_tools.sh   # scanning tools
-chmod +x install.sh && ./install.sh --agent opencode    # skills + commands
+chmod +x install.sh && ./install.sh --agent opencode --project
 ```
 
 The installer will:
-1. Copy domain skills to `.opencode/skills/`
-2. Copy commands to `.opencode/commands/`
-3. Optionally write MCP server config to `opencode.json`
+1. Copy all domain skills to `.opencode/skills/`
+2. Copy all commands to `.opencode/commands/`
+3. Copy the cooperating agent definitions to `.opencode/agents/`
+4. Keep `AGENTS.md` at the project root as the portable operating contract
 
 ### Verify Installation
 
@@ -41,7 +44,7 @@ opencode
 
 ## What's Here
 
-### Skills (9 domains)
+### Skills (21 domains)
 
 | Skill | Domain |
 |---|---|
@@ -54,8 +57,20 @@ opencode
 | `meme-coin-audit` | Meme coin rug pull detection, token authority checks, bonding curve exploits, LP attacks |
 | `report-writing` | H1/Bugcrowd/Intigriti/Immunefi report templates, CVSS 3.1, human tone |
 | `triage-validation` | 7-Question Gate, 4 gates, never-submit list, conditionally valid table |
+| `adaptive-exploit-validation` | Control fingerprints and strategy-family adaptation |
+| `research-intelligence` | Compact Medium/X/RSS/disclosure technique intelligence |
+| `agentic-app-audit` | Agent tools, memory, permissions, and action-boundary review |
+| `mcp-server-audit` | MCP tool poisoning, authorization, transport, and sink review |
+| `graphql-audit` | GraphQL schema, resolver, batching, and authorization testing |
+| `cloud-pentest` | AWS, Azure, GCP, identity, storage, and metadata surfaces |
+| `mobile-pentest` | Android and iOS static/dynamic assessment |
+| `client-reverse` | Client bundle, protocol, and desktop reverse engineering |
+| `cicd-security` | Pipeline, runner, artifact, and secret boundary review |
+| `credential-attack` | Authorized authentication and credential workflow assessment |
+| `llm-redteam` | LLM application testing |
+| `argus` | Investigation and recon support |
 
-### Commands (23 commands)
+### Commands (40+ commands)
 
 | Command | Usage |
 |---|---|
@@ -82,6 +97,15 @@ opencode
 | `bypass-403` | "bypass-403 <url>" — try header/method/encoding tricks |
 | `arsenal` | "arsenal [tool]" — list installed external tools |
 | `scan-cves` | "scan-cves <host>" — focused nuclei CVE sweep |
+| `verify` | Reproduce a candidate with a deterministic verifier |
+| `poc` | Build a proof-of-concept bundle from linked evidence |
+| `dashboard` | Open the local hunt-state dashboard |
+| `llm-app-audit` | Audit an LLM/agentic application |
+| `llm-redteam` | Run focused LLM security testing |
+| `sast` | Source-assisted security review |
+| `jwt-scan` | JWT implementation testing |
+| `nosqli` | NoSQL injection testing |
+| `cors` / `crlf` / `domxss` | Focused web vulnerability workflows |
 
 ## Usage
 
@@ -153,14 +177,14 @@ OpenCode MCP servers are configured under the `mcp` key in your `opencode.json` 
   "mcp": {
     "hackerone": {
       "type": "local",
-      "command": ["python3", "mcp/hackerone-mcp/server.py"],
+      "command": ["python3", "bughunter/mcp/hackerone-mcp/server.py"],
       "enabled": true
     }
   }
 }
 ```
 
-See `mcp/*/opencode-config.json` for ready-to-copy snippets.
+See `bughunter/mcp/*/opencode-config.json` for ready-to-copy snippets.
 
 ## Memory Management
 
@@ -182,7 +206,7 @@ Same as Claude Code version. See main README.md for:
  2. ONLY REAL BUGS          — "Can an attacker do this RIGHT NOW?" if no, stop
  3. KILL WEAK FINDINGS FAST — 30-second check saves hours of wasted reporting
  4. NEVER GO OUT OF SCOPE   — one wrong request can get you banned
- 5. 5-MINUTE RULE           — no progress after 5 min? move to the next target
+ 5. ADAPT, THEN PARK        — change strategy families; park only after safe options are exhausted
  6. VALIDATE BEFORE REPORT  — run validation before you spend 30 min writing
  7. IMPACT FIRST            — start with the bugs that have the worst consequences
 ```
@@ -200,7 +224,7 @@ Same as Claude Code version. See main README.md for:
 ## Troubleshooting
 
 ### Skills not loading
-1. Check symlinks: `ls -la .opencode/skills/`
+1. Check installed skills: `ls -la .opencode/skills/`
 2. Restart OpenCode in this project directory
 
 ### Commands not working
@@ -220,6 +244,6 @@ Same as main project. See README.md.
 
 ---
 
-**Built by bug hunters, for bug hunters.** Works with Claude Code and OpenCode.
+**Built as an OpenCode hunting workspace, with Claude Code and other harnesses supported.**
 
 <sub>MIT License · For authorized security testing only. Test only within an approved bug bounty program scope.</sub>

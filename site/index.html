@@ -33,6 +33,7 @@
     .metric{padding:24px;border-right:1px solid var(--line)}.metric:last-child{border:0}.metric b{display:block;font-size:27px;letter-spacing:-.04em}.metric span{color:var(--muted);font-size:12px}
     section{padding:105px 0}.head{display:grid;grid-template-columns:.65fr 1.35fr;gap:40px;margin-bottom:46px}.head h2{font-size:clamp(36px,5vw,66px);line-height:.96;letter-spacing:-.06em;margin:0}
     .head p{color:var(--muted);max-width:560px;margin:4px 0 0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .cap-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.cap-grid .card{min-height:225px}.cap-grid .card h3{margin-top:30px}
     .card{background:linear-gradient(145deg,#ffffff08,transparent),var(--panel);border:1px solid var(--line);border-radius:16px;padding:27px;min-height:250px}
     .card .num{font:700 11px ui-monospace,monospace;color:var(--pink)}.card h3{font-size:21px;margin:42px 0 10px}.card p{color:var(--muted);margin:0}
     .spine{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}
@@ -43,15 +44,15 @@
     .command code{border:0;background:0;padding:0;color:#e9e4ef;overflow:auto}.copy{border:0;background:var(--pink);color:#130a11;padding:9px 13px;border-radius:8px;font-weight:800;cursor:pointer}
     .final{padding:120px 0;text-align:center;border-top:1px solid var(--line)}.final h2{font-size:clamp(45px,7vw,90px);line-height:.95;letter-spacing:-.07em;margin:0 auto 24px;max-width:900px}.final h2 span{color:var(--pink)}
     footer{display:flex;justify-content:space-between;gap:20px;padding:28px 0 40px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
-    @media(max-width:850px){.hero,.head{grid-template-columns:1fr}.hero{padding-top:70px}.console{transform:none}.grid{grid-template-columns:1fr}.spine{grid-template-columns:1fr 1fr}.research{grid-template-columns:1fr}.navlinks a:not(.pill){display:none}.strip{grid-template-columns:1fr 1fr}.metric:nth-child(2){border-right:0}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}}
-    @media(max-width:520px){.shell{width:min(100% - 24px,1180px)}h1{font-size:53px}.spine,.strip{grid-template-columns:1fr}.metric{border-right:0;border-bottom:1px solid var(--line)}.actions .btn{width:100%;text-align:center}.command{align-items:flex-start;flex-direction:column}}
+    @media(max-width:850px){.hero,.head{grid-template-columns:1fr}.hero{padding-top:70px}.console{transform:none}.grid{grid-template-columns:1fr}.cap-grid{grid-template-columns:1fr 1fr}.spine{grid-template-columns:1fr 1fr}.research{grid-template-columns:1fr}.navlinks a:not(.pill){display:none}.strip{grid-template-columns:1fr 1fr}.metric:nth-child(2){border-right:0}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+    @media(max-width:520px){.shell{width:min(100% - 24px,1180px)}h1{font-size:53px}.cap-grid,.spine,.strip{grid-template-columns:1fr}.metric{border-right:0;border-bottom:1px solid var(--line)}.actions .btn{width:100%;text-align:center}.command{align-items:flex-start;flex-direction:column}}
   </style>
 </head>
 <body>
   <div class="shell">
     <nav>
       <a class="logo" href="#"><i>agent</i>narna</a>
-      <div class="navlinks"><a href="#method">Method</a><a href="#research">Research</a><a href="#proof">Proof spine</a><a class="pill" href="#start">Open console →</a></div>
+      <div class="navlinks"><a href="#platform">Platform</a><a href="#capabilities">Capabilities</a><a href="#method">Method</a><a href="#proof">Proof spine</a><a class="pill" href="#start">Launch OpenCode →</a></div>
     </nav>
 
     <main>
@@ -59,13 +60,17 @@
         <div>
           <div class="eyebrow">Authorized security research / evidence first</div>
           <h1>Don’t flag it.<br><span>Prove it.</span></h1>
-          <p class="lede">agentnarna treats scanner output as a lead, controls as feedback, and only calls something a finding after a fresh exploit oracle verifies real impact.</p>
-          <div class="actions"><a class="btn primary" href="#start">Start a hunt</a><a class="btn secondary" href="#proof">See the proof model</a></div>
+          <p class="lede">A complete OpenCode hunting workspace with 21 skills, 40+ commands, cooperating agents, persistent memory, scanners, adaptive exploitation, and verified-only reports.</p>
+          <div class="actions"><a class="btn primary" href="#start">Launch the workspace</a><a class="btn secondary" href="#capabilities">Explore capabilities</a></div>
           <div class="micro">For authorized targets. Human review remains in the submission loop.</div>
         </div>
         <div class="console" aria-label="agentnarna operator console mockup">
           <div class="consolebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp; agentnarna / acme-web</div>
-          <pre><span class="m">$</span> agentnarna hunt acme.example
+          <pre><span class="m">$</span> ./install.sh --agent opencode --project
+<span class="g">READY</span>      21 skills · 40+ commands · 10 agents
+<span class="m">$</span> opencode
+<span class="p">agentnarna</span>  workspace loaded / acme-web
+<span class="m">›</span> hunt acme.example
 
 <span class="c">RECON</span>      214 routes · 17 workflows · 2 identities
 <span class="c">LEAD</span>       /api/invoices/{id} · access-control hypothesis
@@ -86,14 +91,37 @@
       </div>
 
       <div class="strip">
+        <div class="metric"><b>21</b><span>specialized security skills</span></div>
+        <div class="metric"><b>40+</b><span>OpenCode hunting commands</span></div>
+        <div class="metric"><b>10</b><span>cooperating agents</span></div>
         <div class="metric"><b>0</b><span>unverified items allowed into reports</span></div>
-        <div class="metric"><b>1:1</b><span>finding-to-proof binding</span></div>
-        <div class="metric"><b>fresh</b><span>re-derivation before promotion</span></div>
-        <div class="metric"><b>local</b><span>hunt memory and evidence</span></div>
       </div>
 
+      <section id="platform">
+        <div class="head"><div class="eyebrow">01 / the platform</div><div><h2>OpenCode is the interface.</h2><p>AgentNarna installs into the OpenCode workspace. Natural-language requests route through commands, skills, agents, tools, memory, validation, and reporting without reducing the platform to a shell-script menu.</p></div></div>
+        <div class="grid">
+          <article class="card"><div class="num">DISCOVER</div><h3>Recon + attack surface</h3><p>Subdomains, live services, URLs, parameters, APIs, JavaScript, cloud assets, source, program scope, and prioritized workflows.</p></article>
+          <article class="card"><div class="num">INVESTIGATE</div><h3>Focused + autonomous hunts</h3><p>Web, API, GraphQL, mobile, cloud, CI/CD, Web3, LLM, MCP, credentials, business logic, and multi-step exploit chains.</p></article>
+          <article class="card"><div class="num">REMEMBER</div><h3>Persistent operator context</h3><p>Resumable sessions, tested endpoints, identities, control fingerprints, failed strategies, successful patterns, evidence, and audit history.</p></article>
+        </div>
+      </section>
+
+      <section id="capabilities">
+        <div class="head"><div class="eyebrow">02 / capability surface</div><div><h2>The full toolkit stays intact.</h2><p>The visual redesign changes presentation—not the original operating model. OpenCode remains the coordinator and every capability stays available.</p></div></div>
+        <div class="cap-grid">
+          <article class="card"><div class="num">WEB + API</div><h3>20+ vulnerability classes</h3><p>IDOR/BOLA, SSRF, XSS, SQLi/NoSQLi, auth, OAuth/OIDC, races, uploads, smuggling, cache, GraphQL, and logic flaws.</p></article>
+          <article class="card"><div class="num">IDENTITY</div><h3>Auth-aware testing</h3><p>Anonymous and controlled identities, cookies, bearer tokens, tenant boundaries, privilege differences, and session-linked audit evidence.</p></article>
+          <article class="card"><div class="num">AI SYSTEMS</div><h3>LLM + agentic applications</h3><p>Tool authorization, prompt and indirect injection, memory boundaries, data exfiltration, MCP servers, and unsafe agent actions.</p></article>
+          <article class="card"><div class="num">CODE + INFRA</div><h3>SAST, cloud, CI/CD, mobile</h3><p>Source-assisted review, leaked credentials, runners, artifacts, storage, IAM, metadata, Android/iOS, and client reversing.</p></article>
+          <article class="card"><div class="num">WEB3</div><h3>Contracts + token systems</h3><p>Solidity and DeFi classes, authority controls, liquidity, bonding curves, rug-pull signals, and proof-oriented contract review.</p></article>
+          <article class="card"><div class="num">INTEGRATIONS</div><h3>Burp, Caido, H1, MCP</h3><p>Connect live traffic and program intelligence while keeping scope, approvals, and submission actions under operator control.</p></article>
+          <article class="card"><div class="num">ADAPTATION</div><h3>Controls become feedback</h3><p>WAF, 403, sanitizer, CSP, and rate-limit fingerprints force a different strategy family instead of repetitive payload mutation.</p></article>
+          <article class="card"><div class="num">PROOF</div><h3>Verified-only reporting</h3><p>Every promoted finding owns a deterministic verifier result and explicitly linked evidence. Observations remain suppressed.</p></article>
+        </div>
+      </section>
+
       <section id="method">
-        <div class="head"><div class="eyebrow">01 / the method</div><div><h2>Adaptive, not noisy.</h2><p>Human-style testing is not endless payload mutation. It is forming a precise hypothesis, measuring the control, changing strategy, and stopping when evidence answers the question.</p></div></div>
+        <div class="head"><div class="eyebrow">03 / the method</div><div><h2>Adaptive, not noisy.</h2><p>Human-style testing is not endless payload mutation. It is forming a precise hypothesis, measuring the control, changing strategy, and stopping when evidence answers the question.</p></div></div>
         <div class="grid">
           <article class="card"><div class="num">A / MAP</div><h3>Model the workflow</h3><p>Prioritize business actions, identities, state changes, and sibling surfaces instead of dumping every URL into the model.</p></article>
           <article class="card"><div class="num">B / ADAPT</div><h3>Learn from controls</h3><p>A 403, sanitizer, or WAF becomes a fingerprint. The next attempt must test a different parsing, identity, route, or workflow assumption.</p></article>
@@ -102,7 +130,7 @@
       </section>
 
       <section id="proof">
-        <div class="head"><div class="eyebrow">02 / proof spine</div><div><h2>Findings are a state transition.</h2><p>The dashboard keeps leads and suppressed candidates visible without inflating the finding count. Only verified evidence reaches the report writer.</p></div></div>
+        <div class="head"><div class="eyebrow">04 / proof spine</div><div><h2>Findings are a state transition.</h2><p>The dashboard keeps leads and suppressed candidates visible without inflating the finding count. Only verified evidence reaches the report writer.</p></div></div>
         <div class="spine">
           <div class="stage"><small>STATE 01</small><h3>Lead</h3><p>An anomaly or attack-surface signal. Worth a test, not a claim.</p></div>
           <div class="stage"><small>STATE 02</small><h3>Candidate</h3><p>A concrete hypothesis with an endpoint, input, sink, and expected oracle.</p></div>
@@ -112,7 +140,7 @@
       </section>
 
       <section id="research">
-        <div class="head"><div class="eyebrow">03 / live technique intel</div><div><h2>Learn from hunters. Keep your own judgment.</h2><p>External research is stored as concise, source-linked hypotheses. Popularity never substitutes for target-specific proof.</p></div></div>
+        <div class="head"><div class="eyebrow">05 / live technique intel</div><div><h2>Learn from hunters. Keep your own judgment.</h2><p>External research is stored as concise, source-linked hypotheses. Popularity never substitutes for target-specific proof.</p></div></div>
         <div class="research">
           <article class="card"><div class="num">MEDIUM + RSS</div><h3>No key required</h3><p>Subscribe to tags, publications, researchers, or any RSS/Atom feed. Entries are deduplicated into a compact local ledger.</p><br><code>--medium-tag web-security</code></article>
           <article class="card"><div class="num">X RECENT SEARCH</div><h3>Official API connection</h3><p>Use an X developer project bearer token through <code>X_BEARER_TOKEN</code>. Without it, ingest explicit post URLs or an export.</p><br><code>--x-query '(bug bounty) bypass'</code></article>
@@ -120,14 +148,14 @@
       </section>
 
       <section id="start" class="final">
-        <div class="eyebrow">04 / run locally</div>
-        <h2>More signal.<br><span>Less theatre.</span></h2>
-        <p class="lede" style="margin:0 auto">Use minimal mode for verified proof and final submissions. Turn on audit mode only when you need the full reasoning trail.</p>
-        <div class="command"><code id="cmd">agentnarna hunt target.example</code><button class="copy" onclick="copyCmd()">Copy</button></div>
+        <div class="eyebrow">06 / launch the workspace</div>
+        <h2>Install once.<br><span>Hunt in OpenCode.</span></h2>
+        <p class="lede" style="margin:0 auto">Clone the repository, install the project integration, then launch OpenCode. Standalone scripts remain optional automation helpers—not the primary product.</p>
+        <div class="command"><code id="cmd">./install.sh --agent opencode --project &amp;&amp; opencode</code><button class="copy" onclick="copyCmd()">Copy</button></div>
       </section>
     </main>
 
-    <footer><span>agentnarna · evidence-first authorized security research</span><span>MIT · human-reviewed submissions</span></footer>
+    <footer><span>agentnarna · OpenCode security research workspace</span><span><a href="https://github.com/Narna00/agentnarna">GitHub</a> · MIT · human-reviewed submissions</span></footer>
   </div>
   <script>
     function copyCmd(){const b=document.querySelector('.copy');navigator.clipboard.writeText(document.querySelector('#cmd').textContent).then(()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200)})}
