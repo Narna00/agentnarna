@@ -23,7 +23,7 @@ def test_readme_leads_with_agentnarna_product_command():
     launch_section = text[text.index("## Launch the full platform"):text.index("## What is included")]
     assert "\nopencode\n" not in launch_section
     assert "40+ hunting commands" in text
-    assert "21 specialized skills" in text
+    assert "22 specialized skills" in text
 
 
 @pytest.mark.skipif(BASH is None, reason="bash not available")

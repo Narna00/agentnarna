@@ -10,6 +10,10 @@ python3 tools/hunt.py --target target.com          # recon → leads → scan �
 python3 tools/lead_board.py ingest target.com      # after any /recon
 python3 tools/lead_board.py next target.com        # highest-value untouched lead
 bash tools/external_arsenal.sh                     # what's installed vs missing
+agentnarna tools status                            # reviewed broker + policy
+agentnarna tools ensure --capability recon         # prepare a capability
+agentnarna tools wordlists                         # pinned SecLists subset
+agentnarna tools launch burp                       # launch installed desktop proxy
 ```
 
 ---
@@ -41,6 +45,7 @@ bash tools/external_arsenal.sh                     # what's installed vs missing
 | `graphql_audit.sh` | 7-phase GraphQL audit: introspection, batching, IDOR, injection, alias bomb |
 | `eol_check.py` | End-of-life / lifecycle intel from endoflife.date for fingerprint pairs |
 | `external_arsenal.sh` | Installed-tool registry (~50 external binaries); `_have <tool>` gate |
+| `capability_broker.py` | Guarded discovery, reviewed installs, wordlists, and Burp/Caido lifecycle |
 | `target_selector.py` | Rank public HackerOne programs and pick top targets |
 
 ## WAF / Bypass / Mutation

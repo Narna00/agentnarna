@@ -2310,39 +2310,22 @@ NEXT ACTION: <one concrete action>
 
     def ensure_tool(self, tool_name: str) -> bool:
         """
-        Check if a tool is in PATH. If missing, auto-install and re-check.
-        Returns True if available after the attempt.
+        Resolve tools through AgentNarna's reviewed capability broker.
+
+        Online search results and LLM-proposed package names never flow directly
+        into a shell. Unattended installs require the operator's persisted
+        auto-install policy and every attempt is audited.
         """
-        import shutil
         resolved = self._TOOL_ALIASES.get(tool_name.lower(), tool_name.lower())
-        # Prefer ~/go/bin resolution
-        go_bin = os.path.expanduser(f"~/go/bin/{tool_name}")
-        resolved_go_bin = os.path.expanduser(f"~/go/bin/{resolved}")
-        if os.path.isfile(go_bin) and os.access(go_bin, os.X_OK):
-            return True
-        if os.path.isfile(resolved_go_bin) and os.access(resolved_go_bin, os.X_OK):
-            return True
-        if shutil.which(tool_name):
-            return True
-        if shutil.which(resolved):
-            return True
-
-        print(f"{YELLOW}[Brain] Tool '{tool_name}' not found — attempting install...{NC}")
-        cmd = self._tool_install_command(resolved)
-        if not cmd:
-            print(f"{YELLOW}[Brain] No known install command for '{tool_name}'. Install manually.{NC}")
+        try:
+            from tools.capability_broker import install_tool
+            available = install_tool(resolved)
+            if available:
+                print(f"{GREEN}[Brain] Tool '{resolved}' is ready{NC}")
+            return available
+        except (ValueError, PermissionError, RuntimeError, OSError) as exc:
+            print(f"{YELLOW}[Brain] Tool '{resolved}' unavailable: {exc}{NC}")
             return False
-
-        print(f"{CYAN}[Brain] {cmd}{NC}")
-        # require_confirmation=False: cmd here is looked up from the fixed
-        # _TOOL_INSTALL dict above (keyed by a known tool name), never raw
-        # LLM output or target-controlled content — safe to run unattended.
-        rc, out, err = self.run_command(cmd, timeout=300, require_confirmation=False)
-        if rc == 0:
-            print(f"{GREEN}[Brain] '{resolved}' installed OK{NC}")
-            return True
-        print(f"{YELLOW}[Brain] Install failed (rc={rc}): {err[:200]}{NC}")
-        return False
 
     def _stream_history(self, messages: list, label: str,
                         max_tokens: int = MAX_RESP) -> str:

@@ -45,7 +45,7 @@ agentnarna
 
 ## What's Here
 
-### Skills (21 domains)
+### Skills (22 domains)
 
 | Skill | Domain |
 |---|---|
@@ -60,6 +60,7 @@ agentnarna
 | `triage-validation` | 7-Question Gate, 4 gates, never-submit list, conditionally valid table |
 | `adaptive-exploit-validation` | Control fingerprints and strategy-family adaptation |
 | `research-intelligence` | Compact Medium/X/RSS/disclosure technique intelligence |
+| `tool-orchestration` | Reviewed installs, online candidate discovery, wordlists, Burp/Caido lifecycle |
 | `agentic-app-audit` | Agent tools, memory, permissions, and action-boundary review |
 | `mcp-server-audit` | MCP tool poisoning, authorization, transport, and sink review |
 | `graphql-audit` | GraphQL schema, resolver, batching, and authorization testing |

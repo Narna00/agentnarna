@@ -754,6 +754,35 @@ def cmd_mcp(args):
     raise SystemExit(mcp_main([sub]))
 
 
+def cmd_tools(args):
+    """Manage reviewed tools, wordlists, discovery, and desktop proxies."""
+    from tools.capability_broker import main as broker_main
+
+    argv = [args.tools_action]
+    if args.tools_action == "policy":
+        if args.auto_install is not None:
+            argv.extend(["--auto-install", args.auto_install])
+        if args.auto_launch is not None:
+            argv.extend(["--auto-launch", args.auto_launch])
+    elif args.tools_action == "ensure":
+        if args.tool:
+            argv.extend(["--tool", args.tool])
+        if args.capability:
+            argv.extend(["--capability", args.capability])
+        if args.approve:
+            argv.append("--approve")
+    elif args.tools_action == "wordlists":
+        if args.approve:
+            argv.append("--approve")
+    elif args.tools_action == "launch":
+        argv.append(args.desktop)
+        if args.approve:
+            argv.append("--approve")
+    elif args.tools_action == "discover":
+        argv.append(args.query)
+    raise SystemExit(broker_main(argv))
+
+
 # ── Utility ────────────────────────────────────────────────────────────────────
 
 def _read_stdin_or_prompt(prompt_text: str) -> str:
@@ -893,6 +922,25 @@ def main():
         help="serve (stdio MCP), doctor, or tools",
     )
 
+    p_tools = sub.add_parser("tools", help="Discover, install, and launch reviewed tools")
+    tools_sub = p_tools.add_subparsers(dest="tools_action", required=True)
+    tools_sub.add_parser("status", help="Show tool and policy status")
+    p_tools_policy = tools_sub.add_parser("policy", help="Configure unattended actions")
+    p_tools_policy.add_argument("--auto-install", choices=("on", "off"))
+    p_tools_policy.add_argument("--auto-launch", choices=("on", "off"))
+    p_tools_ensure = tools_sub.add_parser("ensure", help="Ensure a reviewed tool or capability")
+    tools_group = p_tools_ensure.add_mutually_exclusive_group(required=True)
+    tools_group.add_argument("--tool")
+    tools_group.add_argument("--capability")
+    p_tools_ensure.add_argument("--approve", action="store_true")
+    p_tools_words = tools_sub.add_parser("wordlists", help="Sync pinned SecLists files")
+    p_tools_words.add_argument("--approve", action="store_true")
+    p_tools_launch = tools_sub.add_parser("launch", help="Launch an installed desktop proxy")
+    p_tools_launch.add_argument("desktop", choices=("burp", "caido"))
+    p_tools_launch.add_argument("--approve", action="store_true")
+    p_tools_discover = tools_sub.add_parser("discover", help="Search GitHub for candidates without installing")
+    p_tools_discover.add_argument("query")
+
     args = parser.parse_args(argv)
 
     # Apply provider override
@@ -909,7 +957,7 @@ def main():
         if not os.environ.get(env_var) and cfg.get(env_var):
             os.environ[env_var] = cfg[env_var]
 
-    quiet_cmds = {"status", "providers", "models", "mcp", None}
+    quiet_cmds = {"status", "providers", "models", "mcp", "tools", None}
     if not getattr(args, "no_banner", False) and args.command not in quiet_cmds:
         _print_banner()
 
@@ -928,6 +976,7 @@ def main():
         "research":  cmd_research,
         "intel-sync": cmd_research,
         "mcp":       cmd_mcp,
+        "tools":     cmd_tools,
     }
 
     if not args.command:

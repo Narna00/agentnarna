@@ -50,7 +50,7 @@ The AgentNarna workspace currently contains:
 
 - **40+ hunting commands** covering recon, exploitation, validation, reporting,
   scope, memory, cloud, mobile, Web3, LLM applications, source review, and PoCs.
-- **21 specialized skills** with routing for vulnerability classes, platforms,
+- **22 specialized skills** with routing for vulnerability classes, platforms,
   controls, and target technologies.
 - **10 cooperating agents** for recon ranking, autonomous hunting, credentials,
   validation, exploit chains, Web3, tokens, and report writing.
@@ -131,6 +131,7 @@ remain available under `commands/` for transparent review.
 | `triage-validation` | Seven-question gate and deterministic proof boundary |
 | `report-writing` | Submission-ready, evidence-bound reports |
 | `research-intelligence` | Medium, X, RSS, disclosure, and advisory technique cards |
+| `tool-orchestration` | Reviewed tool discovery/install, pinned wordlists, and Burp/Caido lifecycle |
 | `web2-recon` | Asset discovery and attack-surface mapping |
 | `web2-vuln-classes` | Web/API vulnerability classes and control-aware testing |
 | `graphql-audit` | GraphQL schema, resolver, auth, and batching risks |
@@ -190,6 +191,35 @@ agentnarna research --x-query '(bug bounty OR pentest) (bypass OR writeup) -is:r
 AgentNarna can then use the local research ledger during a hunt. At most three
 relevance-ranked cards and 1,800 characters enter an exploit prompt. Posts are
 untrusted hypotheses and never count as proof.
+
+### Automatic tools, wordlists, and desktop proxies
+
+AgentNarna can prepare reviewed tools for the capability a hunt needs, sync a
+commit-pinned SecLists subset, and launch an installed Burp or Caido instance.
+Online discovery is allowed, but search results cannot execute directly.
+
+Enable unattended behavior once:
+
+```bash
+agentnarna tools policy --auto-install on --auto-launch on
+agentnarna tools status
+```
+
+Examples:
+
+```bash
+agentnarna tools ensure --capability recon
+agentnarna tools ensure --capability xss
+agentnarna tools wordlists
+agentnarna tools launch burp
+agentnarna tools discover "GraphQL security scanner"
+```
+
+Reviewed Go packages are resolved to an exact version before installation.
+Installs, wordlist hashes, sources, commands, and desktop launches are recorded
+in `~/.agentnarna/tool-audit.jsonl`. Licensed desktop tools must already be
+installed from their official source; the broker starts them but does not bypass
+their installer or licensing flow.
 
 ### Minimal token waste
 
