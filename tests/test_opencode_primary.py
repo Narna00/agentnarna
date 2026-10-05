@@ -1,4 +1,4 @@
-"""The fork's primary product surface is the OpenCode workspace."""
+"""The fork's primary product surface is the AgentNarna workspace."""
 
 from __future__ import annotations
 
@@ -14,12 +14,14 @@ ROOT = Path(__file__).resolve().parents[1]
 BASH = shutil.which("bash")
 
 
-def test_readme_leads_with_opencode_before_optional_standalone():
+def test_readme_leads_with_agentnarna_product_command():
     text = (ROOT / "README.md").read_text(encoding="utf-8")
-    install = "./install.sh --agent opencode --project"
+    install = "./install.sh"
     assert install in text
-    assert "opencode\n" in text
-    assert text.index(install) < text.index("## Optional standalone CLI")
+    assert "agentnarna\n" in text
+    assert text.index(install) < text.index("## Scriptable commands")
+    launch_section = text[text.index("## Launch the full platform"):text.index("## What is included")]
+    assert "\nopencode\n" not in launch_section
     assert "40+ hunting commands" in text
     assert "21 specialized skills" in text
 
@@ -41,7 +43,7 @@ def test_opencode_shortcut_installs_the_complete_global_workspace(tmp_path):
         timeout=180,
     )
     assert proc.returncode == 0, proc.stderr
-    assert "Start the full AgentNarna workspace" in proc.stdout
+    assert "Compatibility integration installed" in proc.stdout
     assert sorted(p.name for p in (config / "skills").iterdir()) == sorted(
         p.name for p in (ROOT / "skills").iterdir()
     )
@@ -51,3 +53,4 @@ def test_opencode_shortcut_installs_the_complete_global_workspace(tmp_path):
     assert sorted(p.name for p in (config / "agents").glob("*.md")) == sorted(
         p.name for p in (ROOT / "bughunter" / "agents").glob("*.md")
     )
+    assert (config / "themes" / "agentnarna.json").is_file()

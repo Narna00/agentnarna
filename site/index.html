@@ -52,7 +52,7 @@
   <div class="shell">
     <nav>
       <a class="logo" href="#"><i>agent</i>narna</a>
-      <div class="navlinks"><a href="#platform">Platform</a><a href="#capabilities">Capabilities</a><a href="#method">Method</a><a href="#proof">Proof spine</a><a class="pill" href="#start">Launch OpenCode →</a></div>
+      <div class="navlinks"><a href="#platform">Platform</a><a href="#capabilities">Capabilities</a><a href="#method">Method</a><a href="#proof">Proof spine</a><a class="pill" href="#start">Launch AgentNarna →</a></div>
     </nav>
 
     <main>
@@ -60,15 +60,15 @@
         <div>
           <div class="eyebrow">Authorized security research / evidence first</div>
           <h1>Don’t flag it.<br><span>Prove it.</span></h1>
-          <p class="lede">A complete OpenCode hunting workspace with 21 skills, 40+ commands, cooperating agents, persistent memory, scanners, adaptive exploitation, and verified-only reports.</p>
+          <p class="lede">Your complete hunting workspace with 21 skills, 40+ commands, cooperating agents, persistent memory, scanners, adaptive exploitation, and verified-only reports.</p>
           <div class="actions"><a class="btn primary" href="#start">Launch the workspace</a><a class="btn secondary" href="#capabilities">Explore capabilities</a></div>
           <div class="micro">For authorized targets. Human review remains in the submission loop.</div>
         </div>
         <div class="console" aria-label="agentnarna operator console mockup">
           <div class="consolebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp; agentnarna / acme-web</div>
-          <pre><span class="m">$</span> ./install.sh --agent opencode --project
+          <pre><span class="m">$</span> ./install.sh
 <span class="g">READY</span>      21 skills · 40+ commands · 10 agents
-<span class="m">$</span> opencode
+<span class="m">$</span> agentnarna
 <span class="p">agentnarna</span>  workspace loaded / acme-web
 <span class="m">›</span> hunt acme.example
 
@@ -92,13 +92,13 @@
 
       <div class="strip">
         <div class="metric"><b>21</b><span>specialized security skills</span></div>
-        <div class="metric"><b>40+</b><span>OpenCode hunting commands</span></div>
+        <div class="metric"><b>40+</b><span>AgentNarna hunting commands</span></div>
         <div class="metric"><b>10</b><span>cooperating agents</span></div>
         <div class="metric"><b>0</b><span>unverified items allowed into reports</span></div>
       </div>
 
       <section id="platform">
-        <div class="head"><div class="eyebrow">01 / the platform</div><div><h2>OpenCode is the interface.</h2><p>AgentNarna installs into the OpenCode workspace. Natural-language requests route through commands, skills, agents, tools, memory, validation, and reporting without reducing the platform to a shell-script menu.</p></div></div>
+        <div class="head"><div class="eyebrow">01 / the platform</div><div><h2>AgentNarna is the interface.</h2><p>Type one command to enter the branded terminal workspace. Natural-language requests route through commands, skills, agents, tools, memory, validation, and reporting without reducing the platform to a shell-script menu.</p></div></div>
         <div class="grid">
           <article class="card"><div class="num">DISCOVER</div><h3>Recon + attack surface</h3><p>Subdomains, live services, URLs, parameters, APIs, JavaScript, cloud assets, source, program scope, and prioritized workflows.</p></article>
           <article class="card"><div class="num">INVESTIGATE</div><h3>Focused + autonomous hunts</h3><p>Web, API, GraphQL, mobile, cloud, CI/CD, Web3, LLM, MCP, credentials, business logic, and multi-step exploit chains.</p></article>
@@ -107,7 +107,7 @@
       </section>
 
       <section id="capabilities">
-        <div class="head"><div class="eyebrow">02 / capability surface</div><div><h2>The full toolkit stays intact.</h2><p>The visual redesign changes presentation—not the original operating model. OpenCode remains the coordinator and every capability stays available.</p></div></div>
+        <div class="head"><div class="eyebrow">02 / capability surface</div><div><h2>The full toolkit stays intact.</h2><p>The visual redesign carries into the terminal workspace while AgentNarna coordinates every capability behind one product command.</p></div></div>
         <div class="cap-grid">
           <article class="card"><div class="num">WEB + API</div><h3>20+ vulnerability classes</h3><p>IDOR/BOLA, SSRF, XSS, SQLi/NoSQLi, auth, OAuth/OIDC, races, uploads, smuggling, cache, GraphQL, and logic flaws.</p></article>
           <article class="card"><div class="num">IDENTITY</div><h3>Auth-aware testing</h3><p>Anonymous and controlled identities, cookies, bearer tokens, tenant boundaries, privilege differences, and session-linked audit evidence.</p></article>
@@ -149,13 +149,13 @@
 
       <section id="start" class="final">
         <div class="eyebrow">06 / launch the workspace</div>
-        <h2>Install once.<br><span>Hunt in OpenCode.</span></h2>
-        <p class="lede" style="margin:0 auto">Clone the repository, install the project integration, then launch OpenCode. Standalone scripts remain optional automation helpers—not the primary product.</p>
-        <div class="command"><code id="cmd">./install.sh --agent opencode --project &amp;&amp; opencode</code><button class="copy" onclick="copyCmd()">Copy</button></div>
+        <h2>Install once.<br><span>Launch AgentNarna.</span></h2>
+        <p class="lede" style="margin:0 auto">Clone the repository, install the complete workspace, then enter the platform with your own product command.</p>
+        <div class="command"><code id="cmd">./install.sh &amp;&amp; agentnarna</code><button class="copy" onclick="copyCmd()">Copy</button></div>
       </section>
     </main>
 
-    <footer><span>agentnarna · OpenCode security research workspace</span><span><a href="https://github.com/Narna00/agentnarna">GitHub</a> · MIT · human-reviewed submissions</span></footer>
+    <footer><span>agentnarna · evidence-first security research workspace</span><span><a href="https://github.com/Narna00/agentnarna">GitHub</a> · MIT · human-reviewed submissions</span></footer>
   </div>
   <script>
     function copyCmd(){const b=document.querySelector('.copy');navigator.clipboard.writeText(document.querySelector('#cmd').textContent).then(()=>{b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200)})}

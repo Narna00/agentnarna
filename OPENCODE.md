@@ -1,8 +1,8 @@
-# AgentNarna — OpenCode Guide
+# AgentNarna Runtime Guide
 
-This repository is the full AgentNarna hunting workspace for OpenCode—not a
-wrapper around the standalone CLI. OpenCode coordinates the skills, commands,
-agents, tools, hunt memory, validation, and report workflow.
+AgentNarna uses an OpenCode-compatible runtime to render its terminal UI and
+coordinate tools. The runtime is an implementation dependency; AgentNarna is
+the user-facing product and launch command.
 
 ## Installation
 
@@ -24,20 +24,21 @@ You also need [OpenCode](https://opencode.ai) installed.
 git clone https://github.com/Narna00/agentnarna.git
 cd agentnarna
 chmod +x install_tools.sh && ./install_tools.sh   # scanning tools
-chmod +x install.sh && ./install.sh --agent opencode --project
+chmod +x install.sh && ./install.sh
 ```
 
 The installer will:
 1. Copy all domain skills to `.opencode/skills/`
 2. Copy all commands to `.opencode/commands/`
 3. Copy the cooperating agent definitions to `.opencode/agents/`
-4. Keep `AGENTS.md` at the project root as the portable operating contract
+4. Install the AgentNarna theme and launcher
+5. Keep `AGENTS.md` at the project root as the portable operating contract
 
 ### Verify Installation
 
 ```bash
 cd agentnarna
-opencode
+agentnarna
 # Ask: "do you have bug bounty skills?"
 # Should confirm skills are loaded
 ```
@@ -111,7 +112,7 @@ opencode
 
 ### Invoking Commands
 
-OpenCode doesn't have slash commands. Use natural language:
+AgentNarna accepts natural language:
 
 | Task | Say |
 |------|-----|
@@ -126,9 +127,9 @@ Commands auto-invoke based on context.
 
 ```bash
 cd agentnarna
-opencode
+agentnarna
 
-# In OpenCode:
+# In AgentNarna:
 > recon target.com
 > hunt target.com
 > validate
@@ -244,6 +245,6 @@ Same as main project. See README.md.
 
 ---
 
-**Built as an OpenCode hunting workspace, with Claude Code and other harnesses supported.**
+**AgentNarna is the product; OpenCode is one compatible runtime, with Claude Code and other harnesses also supported.**
 
 <sub>MIT License · For authorized security testing only. Test only within an approved bug bounty program scope.</sub>

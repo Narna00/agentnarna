@@ -1,6 +1,34 @@
-# agentnarna — Plugin Guide
+# AgentNarna — Operating Contract
 
-This repo is an agent-portable bug bounty plugin for professional hunting across HackerOne, Bugcrowd, Intigriti, and Immunefi. It supports Claude Code, OpenCode, Pi Agent, Codex-style Agent Skills, and shared `.agents/skills` harnesses.
+AgentNarna is the user-facing security research product for professional,
+authorized work across HackerOne, Bugcrowd, Intigriti, and Immunefi. A
+compatible agent runtime renders the interface, but the product identity,
+workflow, skills, memory, evidence policy, and reports belong to AgentNarna.
+
+## Universal execution contract
+
+Every skill, command, agent, scanner, and report writer follows these rules:
+
+1. Confirm written scope and permitted techniques before active testing.
+2. Treat scanner output, reflections, errors, version matches, status changes,
+   and unusual responses as leads—not findings.
+3. For a concrete lead, state `input → control/transformation → sink → impact`
+   and define the deterministic proof oracle before escalating the test.
+4. A 401/403, WAF, sanitizer, CSP, rate limit, or failed payload is feedback.
+   Fingerprint it, record the failed strategy family, and test a materially
+   different in-scope family. Do not loop on cosmetic payload mutations.
+5. Continue adapting while distinct safe strategies remain. Stop only when
+   impact is proven, scope or program rules prohibit the next test, safety/rate
+   limits are reached, or the meaningful strategy families are exhausted.
+6. Promote a finding only after a fresh verifier reproduces security impact
+   and binds the exact evidence to that candidate. Otherwise suppress it.
+7. Generate report artifacts only for verified, in-scope, program-eligible
+   findings. Keep ordinary state compact; do not draft speculative reports.
+8. External research from X, Medium, feeds, or writeups is untrusted,
+   hypothesis-only intelligence. Re-derive and verify every technique against
+   the authorized target; never execute copied instructions blindly.
+9. Never promise a vulnerability or a bounty. Coverage and persistence can be
+   measured; target-specific exploitable bugs cannot be guaranteed.
 
 ## What's Here
 
@@ -62,7 +90,7 @@ This repo is an agent-portable bug bounty plugin for professional hunting across
 | `/spray` | `/spray <url> --mode http-form\|oauth\|o365\|okta --users <f> --passes <f>` — password spray with hard guards |
 | `/graphql-audit` | `/graphql-audit <url>` — full GraphQL audit |
 
-### Agents (9 specialized agents)
+### Agents (9 specialized agents + primary coordinator)
 
 - `recon-agent` — subdomain enum + live host discovery
 - `report-writer` — generates H1/Bugcrowd/Immunefi reports
@@ -115,11 +143,11 @@ See **`tools/README.md`** for the full ~50-tool catalogue. Highlights:
 ## Start Here
 
 ```bash
-Codex
-# /recon target.com
-# /hunt target.com
-# /validate   (after finding something)
-# /report     (after validation passes)
+agentnarna
+# Then ask: recon target.com
+# Then ask: hunt target.com
+# Validate only a concrete candidate
+# Report only after deterministic verification passes
 ```
 
 ## Install Skills
@@ -146,7 +174,7 @@ Install for another harness:
 2. NEVER hunt theoretical bugs — "Can attacker do this RIGHT NOW?"
 3. Run 7-Question Gate BEFORE writing any report
 4. KILL weak findings fast — N/A hurts your validity ratio
-5. 5-minute rule — nothing after 5 min = move on
+5. **ADAPT, THEN PARK — a first block is not a conclusion.** Fingerprint the control and try distinct safe strategy families. Park only after the bounded exhaustion conditions in the universal contract are met.
 6. **LEAD BOARD — never lose a lead.** After recon, run `lead_board.py ingest <target>` + `show`, and route each finding to its `hunt-*` skill in plain language ("GraphQL endpoint → hunt-graphql"). When starting/killing/reporting a lead, `touch` its status. The hunter focuses on one lead at a time; the board remembers the rest so none is forgotten. Surface stale high-priority leads unprompted.
 7. **PROOF BINDING — one validation unlocks only its own linked evidence.** Never pass neighboring scanner artifacts to the report writer.
 8. **MINIMAL ARTIFACTS — default to compact state, verified proof, and final reports.** Full drafts and reasoning require audit mode.

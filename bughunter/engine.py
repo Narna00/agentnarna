@@ -30,6 +30,7 @@ Providers (auto-detected, first available wins):
                     docs: https://docs.requesty.ai
 
 Usage:
+  agentnarna                              launch the complete terminal workspace
   agentnarna setup                        one-time config wizard
   agentnarna recon  <target>              recon + AI surface analysis
   agentnarna hunt   <target>              full hunt pipeline
@@ -790,6 +791,25 @@ def _print_banner():
 
 def main():
     argv = _normalize_cli_argv(sys.argv[1:])
+
+    # The product's default surface is the complete interactive workspace.
+    # Explicit subcommands keep the scriptable/headless engine available.
+    if not argv:
+        try:
+            from workspace import WorkspaceRuntimeError, launch
+            launch()
+        except WorkspaceRuntimeError as exc:
+            err(str(exc))
+            raise SystemExit(2) from exc
+
+    if argv and argv[0] in {"ui", "workspace"}:
+        try:
+            from workspace import WorkspaceRuntimeError, launch
+            launch(argv[1:])
+        except WorkspaceRuntimeError as exc:
+            err(str(exc))
+            raise SystemExit(2) from exc
+
     parser = argparse.ArgumentParser(
         prog="agentnarna",
         description="agentnarna - evidence-first authorized security research",

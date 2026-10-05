@@ -3,7 +3,7 @@
 
 set -euo pipefail
 
-AGENT="${AGENTNARNA_AGENT:-${BBHUNT_AGENT:-claude}}"
+AGENT="${AGENTNARNA_AGENT:-${BBHUNT_AGENT:-agentnarna}}"
 SCOPE="global"
 SETUP_BURP="ask"
 
@@ -35,15 +35,14 @@ MCP_SRC="$(resolve_src "mcp" "mcp" "bughunter/mcp")" || true
 
 usage() {
     cat <<'EOF'
-Usage: ./install.sh [--agent claude|opencode|pi|codex|agents|standalone|mcp|all] [--global|--project]
+Usage: ./install.sh [--agent agentnarna|claude|opencode|pi|codex|agents|standalone|mcp|all] [--global|--project]
 
-Primary OpenCode workspace:
-  ./install.sh --agent opencode --project
-                                  Install the full AgentNarna workspace here
-  opencode                        Launch the interactive hunting platform
+AgentNarna product (default):
+  ./install.sh                    Install the complete AgentNarna workspace
+  agentnarna                     Launch the interactive hunting platform
 
-Defaults:
-  ./install.sh                    Install for Claude Code globally (compatibility)
+Compatibility integrations:
+  ./install.sh --agent claude     Install for Claude Code globally
 
 Standalone (no subscription needed):
   ./install.sh --agent standalone Install or update the 'agentnarna' command
@@ -212,7 +211,7 @@ install_claude() {
 install_opencode() {
     local root
     if [ "$SCOPE" = "project" ]; then
-        root=".opencode"
+        root="${AGENTNARNA_PROJECT_DIR:-.}/.opencode"
     else
         root="${OPENCODE_CONFIG_DIR:-$HOME/.config/opencode}"
     fi
@@ -221,19 +220,40 @@ install_opencode() {
     copy_tree_items "skills/*" "$root/skills" "skill"
     copy_files "commands/*.md" "$root/commands" "command"
     copy_files "$AGENTS_SRC/*.md" "$root/agents" "agent"
-    echo "Done: $root"
+    copy_files "ui/themes/*.json" "$root/themes" "theme"
+    if [ "${AGENTNARNA_EMBEDDED_INSTALL:-0}" != "1" ]; then
+        echo "Done: $root"
+        echo ""
+        echo "OpenCode also reads AGENTS.md from the project root. Keep this repo's AGENTS.md committed for portable project instructions."
+        echo ""
+        echo "Compatibility integration installed."
+        echo "Start the runtime directly with: opencode"
+    else
+        echo "Done: AgentNarna workspace assets installed"
+    fi
+}
+
+install_agentnarna() {
+    local previous_scope="$SCOPE"
+    local product_root="${AGENTNARNA_PROJECT_DIR:-$SCRIPT_DIR}"
+    if [ ! -f "$product_root/AGENTS.md" ]; then
+        mkdir -p "$product_root"
+        cp "$SCRIPT_DIR/AGENTS.md" "$product_root/AGENTS.md"
+    fi
+    SCOPE="project"
+    AGENTNARNA_EMBEDDED_INSTALL=1 install_opencode
+    SCOPE="$previous_scope"
+    AGENTNARNA_PRODUCT_INSTALL=1 install_standalone
+
     echo ""
-    echo "OpenCode also reads AGENTS.md from the project root. Keep this repo's AGENTS.md committed for portable project instructions."
+    echo "════════════════════════════════════════════════════"
+    echo "  AgentNarna is ready"
     echo ""
-    echo "Start the full AgentNarna workspace from this repository:"
-    echo "  opencode"
+    echo "    agentnarna"
     echo ""
-    echo "Then use natural language inside OpenCode:"
-    echo "  recon target.com"
-    echo "  hunt target.com"
-    echo "  run autopilot on target.com"
-    echo "  validate this finding"
-    echo "  write the report"
+    echo "  This launches the complete branded workspace."
+    echo "════════════════════════════════════════════════════"
+    echo ""
 }
 
 install_pi() {
@@ -288,11 +308,15 @@ install_agents() {
 install_standalone() {
     echo ""
     echo "════════════════════════════════════════════════════"
-    echo "  AgentNarna Standalone Engine"
+    if [ "${AGENTNARNA_PRODUCT_INSTALL:-0}" = "1" ]; then
+        echo "  AgentNarna Launcher"
+    else
+        echo "  AgentNarna Standalone Engine"
+    fi
     echo "════════════════════════════════════════════════════"
     echo ""
 
-    local repo_dir engine existing_cmd bin_dir target action command_name
+    local repo_dir engine existing_cmd bin_dir target action command_name command_names
     local -a install_cmd
     repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     engine="$repo_dir/bughunter/engine.py"
@@ -337,7 +361,11 @@ install_standalone() {
     # bash 3.2 (macOS default) aborts under set -u when expanding an empty array
     # as "${install_cmd[@]}" — same idiom as tools/_auth_helper.sh.
     ${install_cmd[@]+"${install_cmd[@]}"} mkdir -p "$bin_dir"
-    for command_name in agentnarna bughunter; do
+    command_names="agentnarna bughunter"
+    if [ "${AGENTNARNA_PRODUCT_INSTALL:-0}" = "1" ]; then
+        command_names="agentnarna"
+    fi
+    for command_name in $command_names; do
         target="$bin_dir/$command_name"
         action="Installed"
         if [ -e "$target" ] || [ -L "$target" ]; then
@@ -392,16 +420,20 @@ install_standalone() {
     fi
 
     echo ""
-    echo "════════════════════════════════════════════════════"
-    echo "  Done! Type from anywhere:"
-    echo ""
-    echo "    agentnarna setup"
-    echo "    agentnarna models"
-    echo "    agentnarna recon target.com"
-    echo "    agentnarna hunt  target.com"
-    echo "    agentnarna validate \"<finding>\""
-    echo "    agentnarna chat"
-    echo "════════════════════════════════════════════════════"
+    if [ "${AGENTNARNA_PRODUCT_INSTALL:-0}" = "1" ]; then
+        echo "[+] AgentNarna launcher installed"
+    else
+        echo "════════════════════════════════════════════════════"
+        echo "  Done! Scriptable commands:"
+        echo ""
+        echo "    agentnarna setup"
+        echo "    agentnarna models"
+        echo "    agentnarna recon target.com"
+        echo "    agentnarna hunt  target.com"
+        echo "    agentnarna validate \"<finding>\""
+        echo "    agentnarna chat"
+        echo "════════════════════════════════════════════════════"
+    fi
     echo ""
 }
 
@@ -435,6 +467,10 @@ install_mcp() {
 }
 
 case "$AGENT" in
+    agentnarna)
+        SETUP_BURP="no"
+        install_agentnarna
+        ;;
     standalone|engine)
         SETUP_BURP="no"
         install_standalone

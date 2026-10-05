@@ -1,10 +1,9 @@
 # AgentNarna
 
-AgentNarna is an OpenCode-powered security research workspace for authorized
-pentests and bug bounty programs. It is not merely a collection of terminal
-scripts: OpenCode is the primary interface, while the repository supplies the
-specialized skills, commands, agents, memory, scanners, validation gates, and
-reporting workflow behind it.
+AgentNarna is an interactive security research workspace for authorized
+pentests and bug bounty programs. AgentNarna is the product, command, visual
+identity, and operating workflow. A compatible terminal-agent runtime renders
+the interface underneath it; users launch `agentnarna`, not that runtime.
 
 > Use AgentNarna only on assets and techniques explicitly authorized by the
 > engagement or bug bounty program. Reports remain subject to human review.
@@ -22,14 +21,14 @@ cd agentnarna
 chmod +x install_tools.sh install.sh
 ./install_tools.sh
 
-# Install all AgentNarna skills, commands, and agents into this workspace.
-./install.sh --agent opencode --project
+# Install the complete product: launcher, theme, skills, commands, and agents.
+./install.sh
 
-# This is the main AgentNarna experience.
-opencode
+# Enter the complete AgentNarna workspace.
+agentnarna
 ```
 
-Inside OpenCode, speak naturally:
+Inside AgentNarna, speak naturally:
 
 ```text
 recon target.example
@@ -40,14 +39,14 @@ validate this finding
 write a submission-ready report
 ```
 
-OpenCode reads `AGENTS.md` from the repository and discovers the installed
+The embedded runtime reads `AGENTS.md` from the repository and discovers the installed
 `.opencode/skills`, `.opencode/commands`, and `.opencode/agents` directories.
-The installer copies the complete workspace; it does not replace it with a
-smaller command-line interface.
+The `agentnarna` launcher applies the AgentNarna theme and opens the complete
+workspace. OpenCode remains a runtime prerequisite, not the product command.
 
 ## What is included
 
-The OpenCode workspace currently contains:
+The AgentNarna workspace currently contains:
 
 - **40+ hunting commands** covering recon, exploitation, validation, reporting,
   scope, memory, cloud, mobile, Web3, LLM applications, source review, and PoCs.
@@ -60,14 +59,14 @@ The OpenCode workspace currently contains:
 - Persistent hunt memory, resumable sessions, audit logs, scope enforcement,
   adaptive validation, and verified-only report generation.
 
-External tools are helpers. OpenCode coordinates the workflow, selects the
+External tools are helpers. AgentNarna coordinates the workflow, selects the
 relevant skill or agent, interprets results, changes strategy, and maintains
 the investigation state.
 
 ## Main workflow
 
 ```text
-OpenCode
+AgentNarna
    ↓
 scope → recon → attack-surface ranking → focused hunt
    ↓                                      ↓
@@ -108,7 +107,7 @@ write a HackerOne report using only linked evidence
 
 ## Commands
 
-OpenCode invokes these from natural-language requests. The command documents
+AgentNarna invokes these from natural-language requests. The command documents
 remain available under `commands/` for transparent review.
 
 | Area | Commands |
@@ -188,7 +187,7 @@ export X_BEARER_TOKEN="..."
 agentnarna research --x-query '(bug bounty OR pentest) (bypass OR writeup) -is:retweet'
 ```
 
-OpenCode can then use the local research ledger during a hunt. At most three
+AgentNarna can then use the local research ledger during a hunt. At most three
 relevance-ranked cards and 1,800 characters enter an exploit prompt. Posts are
 untrusted hypotheses and never count as proof.
 
@@ -207,7 +206,7 @@ Use `audit` only when the complete investigation trail is required.
 ## Operator dashboard
 
 The local dashboard is an additional view of hunt state; it is not a
-replacement for OpenCode.
+replacement for the AgentNarna workspace.
 
 ```bash
 python3 bughunter/tools/hunt_dashboard.py serve --port 8777
@@ -216,13 +215,12 @@ python3 bughunter/tools/hunt_dashboard.py serve --port 8777
 It shows attack-surface state, leads, active investigations, verified findings,
 suppressed candidates, and report artifacts.
 
-## Optional standalone CLI
+## Scriptable commands
 
-Standalone mode is retained for automation, CI, and users who do not want an
-agent harness. It is **not** the primary OpenCode interface.
+Explicit subcommands are retained for automation and CI. Running `agentnarna`
+without a subcommand always launches the full interactive product.
 
 ```bash
-./install.sh --agent standalone
 agentnarna setup
 agentnarna hunt target.example
 ```
@@ -232,7 +230,8 @@ The legacy `bughunter` command remains a compatibility alias.
 ## Other supported harnesses
 
 ```bash
-./install.sh                         # Claude Code global integration
+./install.sh                         # complete AgentNarna product
+./install.sh --agent claude          # Claude Code global integration
 ./install.sh --agent opencode        # OpenCode global integration
 ./install.sh --agent codex --project # project-local Codex skills
 ./install.sh --agent pi --project    # project-local Pi integration

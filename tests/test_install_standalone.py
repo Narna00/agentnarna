@@ -49,6 +49,31 @@ def test_standalone_install_succeeds(tmp_path):
     assert (bin_dir / "bughunter").is_symlink()
 
 
+def test_default_install_creates_complete_agentnarna_product(tmp_path):
+    bin_dir = tmp_path / "bin"
+    workspace = tmp_path / "workspace"
+    env = {
+        **os.environ,
+        "AGENTNARNA_BIN_DIR": str(bin_dir),
+        "AGENTNARNA_PROJECT_DIR": str(workspace),
+        "AGENTNARNA_SKIP_DEPS": "1",
+    }
+    proc = subprocess.run(
+        [BASH, os.path.join(REPO, "install.sh")],
+        cwd=REPO,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert (bin_dir / "agentnarna").is_symlink()
+    assert (workspace / "AGENTS.md").is_file()
+    assert (workspace / ".opencode" / "themes" / "agentnarna.json").is_file()
+    assert (workspace / ".opencode" / "skills" / "bug-bounty" / "SKILL.md").is_file()
+    assert "AgentNarna is ready" in proc.stdout
+
+
 def test_standalone_install_links_to_engine(tmp_path):
     bin_dir = tmp_path / "bin"
     _run("install.sh", ["--agent", "standalone"], bin_dir)
